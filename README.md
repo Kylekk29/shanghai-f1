@@ -74,3 +74,7 @@ Open `shanghai-f1-final.html?selftest` — 31 checks run against real simulation
 - Handling was tuned by numbers and headless tests, not by a lot of human play — expect to tweak the feel.
 - Lap times (~1:32–1:36) are faster than a real F1 car: the physics are arcade-style.
 - Tested in headless Edge only; not tested on real touch devices or with audible output.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
