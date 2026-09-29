@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Shanghai F1 · 上海国际赛车场</title>
+<style>
+:root{--bg:#05070d;--panel:rgba(11,15,25,.74);--line:rgba(255,255,255,.13);--txt:#eef1f7;--mut:#8a93a8;
+  --red:#e10600;--grn:#22c55e;--pur:#b45cff;--yel:#ffd60a;--cy:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);overflow:hidden;
+  font-family:"Bahnschrift","Segoe UI",system-ui,"Microsoft YaHei",sans-serif;
+  user-select:none;-webkit-user-select:none;touch-action:none}
+#app{position:fixed;inset:0}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.6) 100%)}
+.panel{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:10px;backdrop-filter:blur(6px);padding:8px 12px}
+.mono{font-family:"Bahnschrift","Consolas","Cascadia Mono",monospace;font-variant-numeric:tabular-nums}
+.lbl{font-size:10px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
+/* position / lap */
+#posBox{left:14px;top:14px;min-width:132px}
+#pos{font-size:44px;font-weight:800;line-height:1;letter-spacing:-1px}
+#pos small{font-size:16px;color:var(--mut);font-weight:600;margin-left:3px}
+#lapTxt{margin-top:4px;font-size:15px;font-weight:700}
+#lapTxt span{color:var(--mut)}
+/* timing */
+#timeBox{left:50%;top:14px;transform:translateX(-50%);text-align:center;min-width:280px}
+#tCur{font-size:34px;font-weight:800;line-height:1.05}
+#tDelta{font-size:15px;font-weight:700;height:20px}
+.row2{display:flex;justify-content:space-between;gap:16px;margin-top:2px}
+.row2 div{flex:1}.row2 b{display:block;font-size:15px}
+#secs{display:flex;gap:6px;margin-top:6px}
+.sec{flex:1;padding:3px 0;border-radius:5px;background:#1a2030;font-size:12px;font-weight:700;border-bottom:3px solid #3a4258}
+.sec.cur{border-color:#fff}.sec.g{background:#0f3d24;border-color:var(--grn)}.sec.p{background:#3a1f5c;border-color:var(--pur)}.sec.y{background:#4a3f0a;border-color:var(--yel)}
+/* tower */
+#tower{right:14px;top:14px;width:190px;padding:6px 8px}
+#tower div{display:flex;gap:6px;font-size:12px;padding:2px 4px;border-radius:4px;align-items:center}
+#tower div.me{background:rgba(225,6,0,.28);font-weight:800}
+#tower i{width:4px;height:14px;border-radius:2px;display:inline-block}
+#tower .p{width:16px;text-align:right;color:var(--mut)}#tower .c{width:34px;font-weight:700}#tower .g{margin-left:auto;color:var(--mut)}
+#status{right:14px;top:auto;bottom:auto;position:absolute}
+#statusBox{right:14px;top:198px;padding:6px 12px;font-size:12px;font-weight:800;letter-spacing:.12em;border-left:4px solid var(--grn)}
+#statusBox.y{border-color:var(--yel)}#statusBox.r{border-color:var(--red)}#statusBox.w{border-color:#fff}#statusBox.g{border-color:var(--grn);color:var(--grn)}
+#drs{display:inline-block;margin-top:6px;padding:2px 14px;border-radius:6px;border:1px solid var(--line);font-weight:900;letter-spacing:.14em;font-size:13px;color:#5b6479;background:#10141f}
+#drs.ready{color:#0b0f1a;background:var(--yel);border-color:var(--yel)}#drs.open{color:#04150a;background:var(--grn);border-color:var(--grn);box-shadow:0 0 14px rgba(34,197,94,.7)}
+#menuMap{width:100%;height:auto;display:block;background:#080b14;border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.facts span{background:#151b2b;border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:12px;color:var(--mut)}.facts b{color:var(--txt)}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-bottom:6px}.lg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+/* tyres */
+#tyreBox{left:14px;bottom:14px;width:190px}
+.bar{height:7px;background:#1b2130;border-radius:4px;overflow:hidden;margin:3px 0 7px}
+.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--grn);transition:width .2s}
+.badge{display:inline-block;width:20px;height:20px;border-radius:50%;text-align:center;line-height:17px;font-size:12px;font-weight:900;border:3px solid #fff;color:#fff;margin-right:6px}
+#tyreHead{display:flex;align-items:center;font-weight:800;margin-bottom:6px}
+/* dash */
+#dash{left:50%;bottom:14px;transform:translateX(-50%);text-align:center;min-width:300px}
+#spd{font-size:64px;font-weight:800;line-height:.95;letter-spacing:-2px}
+#spdU{font-size:12px;color:var(--mut);letter-spacing:.2em}
+#gear{position:absolute;right:14px;top:8px;font-size:30px;font-weight:800;color:var(--yel)}
+#rpm{display:flex;gap:2px;margin:8px 0 6px}#rpm i{flex:1;height:8px;background:#1b2130;border-radius:2px}
+#rpm i.on{background:var(--grn)}#rpm i.on.m{background:var(--yel)}#rpm i.on.h{background:var(--red)}
+.pedals{display:flex;gap:10px}.pedals div{flex:1;text-align:left;font-size:10px;color:var(--mut)}
+#thr{background:var(--grn)}#brk{background:var(--red)}
+/* minimap */
+#miniBox{right:14px;bottom:14px;padding:6px}
+#mini{display:block;width:250px;height:120px}
+/* buttons */
+#btns{position:absolute;left:14px;top:112px;display:flex;flex-direction:column;gap:5px;width:132px}
+#btns button{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+#btns button:hover{border-color:var(--red)}
+/* centre messages */
+#lights{position:absolute;left:50%;top:40%;transform:translateX(-50%);display:none;gap:12px;background:#0009;padding:12px 18px;border-radius:14px;border:1px solid var(--line)}
+#lights i{width:34px;height:34px;border-radius:50%;background:#2a0a0a;box-shadow:inset 0 0 6px #000}
+#lights i.on{background:var(--red);box-shadow:0 0 22px 4px rgba(255,20,10,.85)}
+#big{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:64px;font-weight:900;letter-spacing:.06em;text-shadow:0 4px 24px #000;opacity:0;pointer-events:none;text-align:center}
+#big.show{animation:pop 1.6s ease-out forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}70%{opacity:1}100%{opacity:0}}
+#toast{position:absolute;left:50%;top:176px;transform:translateX(-50%);font-weight:800;font-size:15px;padding:4px 12px;border-radius:6px;background:#000a;opacity:0;transition:opacity .3s}
+/* overlays */
+.overlay{position:absolute;inset:0;background:rgba(3,5,10,.78);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.card{background:#0d121e;border:1px solid var(--line);border-radius:16px;padding:22px 26px;max-width:640px;width:100%}
+.card h1{margin:0;font-size:26px;letter-spacing:.02em}.card h1 b{color:var(--red)}
+.card p{color:var(--mut);margin:.3em 0 1em}
+.opts{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;margin:12px 0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{background:#151b2b;color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font:inherit;cursor:pointer}
+.seg button.on{border-color:var(--red);background:#2a1114}
+.go{background:var(--red);color:#fff;border:0;border-radius:10px;padding:12px 26px;font:inherit;font-size:18px;font-weight:800;letter-spacing:.06em;cursor:pointer;width:100%;margin-top:6px}
+.go:hover{filter:brightness(1.15)}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13px;color:var(--mut);margin-top:14px}
+kbd{background:#1b2130;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--txt);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+td,th{padding:5px 6px;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--mut);font-size:11px;letter-spacing:.1em}
+tr.me td{background:rgba(225,6,0,.22);font-weight:800}
+/* touch */
+#touch{display:none}
+@media (pointer:coarse){#touch{display:block}}
+#touch button{position:absolute;bottom:16px;width:74px;height:74px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.1);color:#fff;font-size:26px;touch-action:none}
+@media (max-width:860px){
+  #tower,#tyreBox{display:none}#statusBox{top:auto;bottom:150px;right:14px}
+  #timeBox{min-width:220px;transform:translateX(-50%) scale(.85);transform-origin:top center}
+  #mini{width:170px;height:82px}#spd{font-size:46px}#dash{min-width:220px}
+  #posBox{transform:scale(.82);transform-origin:top left}
+}
+@media (pointer:coarse){#dash{bottom:100px}#miniBox{bottom:100px}}
+@media (max-width:520px){
+  #miniBox{top:8px;bottom:auto;right:8px;padding:3px}#mini{width:112px;height:54px}#statusBox{top:78px;bottom:auto;right:8px;width:112px;text-align:center;white-space:nowrap;font-size:10px;padding:4px 2px;letter-spacing:.06em}
+  #dash{bottom:8px;min-width:200px;padding:6px 10px}#spd{font-size:40px}#gear{font-size:22px}#posBox{left:8px;top:8px}#timeBox{left:calc(50% - 22px)}
+  #btns{top:100px;left:8px;width:112px}#btns button{padding:3px 6px;font-size:11px}
+}
+@media (max-height:560px){#dash,#tyreBox,#miniBox{transform-origin:bottom}#dash{transform:translateX(-50%) scale(.75)}#big{font-size:44px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div class="vig"></div>
+
+  <div class="panel" id="posBox"><div class="lbl">Race position</div><div id="pos" class="mono">P–<small>/–</small></div><div id="lapTxt">LAP <b id="lapN">0</b> <span>/ <span id="lapT">3</span></span></div></div>
+
+  <div class="panel" id="timeBox">
+    <div class="lbl">Lap time <span id="dLbl" style="letter-spacing:0"></span></div><div id="tCur" class="mono">0:00.000</div><div id="tDelta" class="mono"></div>
+    <div class="row2"><div><span class="lbl">Best</span><b id="tBest" class="mono">--:--.---</b></div><div><span class="lbl">Last</span><b id="tLast" class="mono">--:--.---</b></div></div>
+    <div id="secs"><div class="sec" id="s0">S1</div><div class="sec" id="s1">S2</div><div class="sec" id="s2">S3</div></div>
+  </div>
+
+  <div class="panel" id="tower"></div>
+  <div class="panel" id="statusBox">GRID</div>
+
+  <div id="btns">
+    <button id="bRestart" title="Enter">⟲ Restart</button><button id="bMenu">☰ Menu</button>
+    <button id="bCam" title="C">Camera</button><button id="bLine" title="R">Racing line</button><button id="bMute" title="M">Sound</button>
+  </div>
+
+  <div class="panel" id="tyreBox">
+    <div id="tyreHead"><span class="badge" id="tBadge">M</span><span id="tName">MEDIUM</span><span class="mono" id="gripTxt" style="margin-left:auto;color:var(--mut)">100%</span></div>
+    <div class="lbl">Wear</div><div class="bar"><i id="wearBar"></i></div>
+    <div class="lbl">Temperature <span id="tempTxt" class="mono"></span></div><div class="bar"><i id="tempBar"></i></div>
+  </div>
+
+  <div class="panel" id="dash">
+    <div id="gear" class="mono">N</div>
+    <div id="spd" class="mono">0</div><div id="spdU">KM/H</div>
+    <div id="rpm"></div><div id="drs" class="mono">DRS</div>
+    <div class="pedals"><div>THROTTLE<div class="bar"><i id="thr"></i></div></div><div>BRAKE<div class="bar"><i id="brk"></i></div></div></div>
+  </div>
+
+  <div class="panel" id="miniBox"><canvas id="mini" width="500" height="240"></canvas></div>
+
+  <div id="lights"><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="big"></div><div id="toast"></div>
+
+  <div id="touch">
+    <button id="tL" style="left:14px">◀</button><button id="tR" style="left:100px">▶</button>
+    <button id="tG" style="right:14px;background:rgba(34,197,94,.3)">▲</button><button id="tB" style="right:100px;background:rgba(225,6,0,.3)">▼</button>
+  </div>
+
+  <div class="overlay" id="menu"><div class="card">
+    <h1><b>SHANGHAI</b> INTERNATIONAL CIRCUIT <span style="font-size:16px;color:var(--mut)">上海国际赛车场</span></h1>
+    <div class="facts" id="facts"></div>
+    <canvas id="menuMap" width="900" height="330"></canvas>
+    <div class="lg"><span><i style="background:#e10600"></i>Sector 1 · 第一段</span><span><i style="background:#2f7cf6"></i>Sector 2</span><span><i style="background:#ffd60a"></i>Sector 3</span><span><i style="background:#22c55e"></i>DRS zone</span><span>▮ Start / Finish · 起终点</span></div>
+    <div class="opts">
+      <div class="lbl">Race length</div><div class="seg" id="oLaps"><button data-v="1">1 lap</button><button data-v="3" class="on">3 laps</button><button data-v="5">5 laps</button></div>
+      <div class="lbl">Tyres</div><div class="seg" id="oTyre"><button data-v="S">Soft</button><button data-v="M" class="on">Medium</button><button data-v="H">Hard</button></div>
+      <div class="lbl">AI level</div><div class="seg" id="oAI"><button data-v="rookie">Rookie</button><button data-v="pro" class="on">Pro</button><button data-v="legend">Legend</button></div>
+    </div>
+    <button class="go" id="bStart">START RACE</button>
+    <div class="keys">
+      <div><kbd>W</kbd> / <kbd>↑</kbd> accelerate</div><div><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> steer</div>
+      <div><kbd>S</kbd> / <kbd>↓</kbd> brake / reverse</div><div><kbd>C</kbd> camera · <kbd>R</kbd> racing line</div>
+      <div><kbd>X</kbd> put car back on track</div><div><kbd>Enter</kbd> restart · <kbd>P</kbd> pause · <kbd>M</kbd> sound</div>
+      <div style="grid-column:1/3">DRS opens automatically at full throttle inside a zone when you were within 1 s of the car ahead at the detection line.</div>
+    </div>
+  </div></div>
+
+  <div class="overlay" id="results" style="display:none"><div class="card">
+    <h1 id="resTitle">Chequered flag</h1><p id="resSub"></p>
+    <table id="resTable"></table>
+    <button class="go" id="bAgain">RACE AGAIN</button>
+  </div></div>
+</div>
+
+<script>
+/* =====================================================================
+   SHANGHAI F1 FINAL — a single-file racing simulator (merge of the flat SVG circuit
+   presentation and the pseudo-3D driving prototype, audited and extended).
+   Systems (in file order):
+     1. Utils            2. Track (spline, frame query, racing line, zones)
+     3. Tyres            4. Car + Physics (slip model, friction circle, walls)
+     5. Driver AI        6. Race (state machine, collisions, lap timing, ghost)
+     7. Renderer (pseudo-3D perspective, painter's algorithm)
+     8. UI / Input / Audio / main loop
+   The simulation (1-6) has no DOM dependency, so it can be unit-tested headless.
+   ===================================================================== */
+(() => {
+'use strict';
+
+/* ---------------------------------------------------------------- 1. UTILS */
+const TAU = Math.PI * 2, G = 9.81;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const wrap = a => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const fmt = t => { if (t == null || !isFinite(t)) return '--:--.---'; const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(3); };
+const fmtD = d => (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(2);
+
+/* Tunable constants (metres, seconds) */
+const HALF = 7, SHOULDER = 1.2, WALL = 13.5;      // track half-width, kerb/apron strip, run-off width to the barrier
+const CAR = { WB: 3.6, LEN: 5.0, WID: 2.0 };
+const PH = { MU: 1.55, DF: 0.0028, ENG: 18, VENG: 108, BRK: 44, DRAG: 0.00042, ROLL: 0.22, KLAT: 9 };
+/* Maximum front-wheel angle (rad) shrinks with speed so a held key cannot swing the car at 300 km/h. Shared by Car.step and drive(). */
+const steerLock = v => 0.55 / (1 + (v / 20) * (v / 20));
+const WHEELS = [[1.5, .9], [1.5, -.9], [-1.5, .95], [-1.5, -.95]];        // [forward, right] offsets
+const CORNERS = [[2.4, .95], [2.4, -.95], [-2.3, 1], [-2.3, -1]];
+const SURF = {
+  asphalt: { mu: 1.0, drag: 0, rough: 0, name: 'asphalt' }, shoulder: { mu: .93, drag: .01, rough: .1, name: 'shoulder' },
+  kerb: { mu: .86, drag: .03, rough: .6, name: 'kerb' }, grass: { mu: .55, drag: .30, rough: .35, name: 'grass' },
+  gravel: { mu: .38, drag: .9, rough: .5, name: 'gravel' }
+};
+
+/* --------------------------------------------------------------- 2. TRACK */
+/* Control points (hand-drawn plan view of the "上" layout, y down, clockwise). `t` = corner number. */
+const CTRL = [
+  { x: 520, y: 0 }, { x: 680, y: 0 }, { x: 850, y: 0 },
+  { x: 985, y: 10 }, { x: 1060, y: 50, t: 1 }, { x: 1090, y: 120 }, { x: 1070, y: 175, t: 2 }, { x: 1015, y: 195 }, { x: 960, y: 185 },
+  { x: 905, y: 200 }, { x: 865, y: 240, t: 3 }, { x: 850, y: 300 }, { x: 880, y: 345, t: 4 }, { x: 940, y: 360 },
+  { x: 1010, y: 355, t: 5 }, { x: 1060, y: 375 }, { x: 1085, y: 420 }, { x: 1080, y: 470 }, { x: 1110, y: 495, t: 6 }, { x: 1145, y: 480 }, { x: 1155, y: 440 },
+  { x: 1175, y: 360, t: 7 }, { x: 1230, y: 340 }, { x: 1300, y: 345 }, { x: 1345, y: 325, t: 8 }, { x: 1405, y: 345, t: 9 }, { x: 1440, y: 410, t: 10 },
+  { x: 1435, y: 500 }, { x: 1395, y: 570, t: 11 }, { x: 1340, y: 600 }, { x: 1290, y: 595, t: 12 }, { x: 1230, y: 600, t: 13 },
+  { x: 1100, y: 600 }, { x: 800, y: 600 }, { x: 500, y: 600 },
+  { x: 380, y: 600 }, { x: 322, y: 594 }, { x: 288, y: 565, t: 14 }, { x: 275, y: 515 }, { x: 262, y: 450 }, { x: 250, y: 385, t: 15 }, { x: 255, y: 320 }, { x: 260, y: 240 },
+  { x: 275, y: 150 }, { x: 315, y: 70, t: 16 }, { x: 380, y: 20 }, { x: 450, y: 3 }];
+const TRACK_LEN = 5451;   // real lap length; the plan is scaled to it
+
+class Track {
+  constructor(ctrl) {
+    /* (1) Closed uniform Catmull-Rom spline through the control points, densely sampled. */
+    const n = ctrl.length, S = 48, dense = [];
+    for (let i = 0; i < n; i++) {
+      const p0 = ctrl[(i - 1 + n) % n], p1 = ctrl[i], p2 = ctrl[(i + 1) % n], p3 = ctrl[(i + 2) % n];
+      for (let k = 0; k < S; k++) {
+        const t = k / S, t2 = t * t, t3 = t2 * t;
+        dense.push([0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+                    0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)]);
+      }
+    }
+    let raw = 0; for (let i = 0; i < dense.length; i++) { const a = dense[i], b = dense[(i + 1) % dense.length]; raw += Math.hypot(b[0] - a[0], b[1] - a[1]); }
+    this.scale = TRACK_LEN / raw;
+
+    /* (2) Resample at uniform arc length (ds ≈ 4 m). All later maths relies on uniform spacing. */
+    const N = this.N = Math.round(TRACK_LEN / 4), ds = this.ds = TRACK_LEN / N, L = this.L = TRACK_LEN;
+    const X = this.x = new Float64Array(N), Y = this.y = new Float64Array(N);
+    let seg = 0, acc = 0; const m = dense.length;
+    for (let j = 0; j < N; j++) {
+      const target = j * ds;
+      for (;;) { const a = dense[seg % m], b = dense[(seg + 1) % m], sl = Math.hypot(b[0] - a[0], b[1] - a[1]) * this.scale;
+        if (acc + sl >= target || seg > 3 * m) { const t = sl > 0 ? (target - acc) / sl : 0;
+          X[j] = (a[0] + (b[0] - a[0]) * t) * this.scale; Y[j] = (a[1] + (b[1] - a[1]) * t) * this.scale; break; }
+        acc += sl; seg++; }
+    }
+    /* (3) Frame: tangent, right-hand normal (y-down => normal = (-ty, tx)), signed curvature (+ = right turn). */
+    this.tx = new Float64Array(N); this.ty = new Float64Array(N); this.nx = new Float64Array(N); this.ny = new Float64Array(N);
+    this.kap = new Float64Array(N); const th = new Float64Array(N);
+    for (let i = 0; i < N; i++) { const a = (i - 1 + N) % N, b = (i + 1) % N; let dx = X[b] - X[a], dy = Y[b] - Y[a]; const l = Math.hypot(dx, dy);
+      this.tx[i] = dx / l; this.ty[i] = dy / l; this.nx[i] = -this.ty[i]; this.ny[i] = this.tx[i]; th[i] = Math.atan2(dy, dx); }
+    const kr = new Float64Array(N);
+    for (let i = 0; i < N; i++) kr[i] = wrap(th[(i + 1) % N] - th[i]) / ds;
+    for (let i = 0; i < N; i++) { let s = 0; for (let k = -3; k <= 3; k++) s += kr[(i + k + N) % N]; this.kap[i] = s / 7; }
+    /* (4) Zones: kerbs where the road bends, gravel on the outside of tight bends. */
+    this.kerb = new Uint8Array(N); this.gravel = new Int8Array(N);
+    for (let i = 0; i < N; i++) { const k = Math.abs(this.kap[i]);
+      if (k > 0.0032) for (let d = -5; d <= 5; d++) this.kerb[(i + d + N) % N] = 1;
+      if (k > 0.0065) for (let d = -10; d <= 10; d++) this.gravel[(i + d + N) % N] = this.kap[i] > 0 ? -1 : 1; }
+    this._b = 0; this._bi = 0; this._bt = 0;
+    /* (5) Shared metadata — the ONE source used by physics, AI, DRS, renderer, minimap and timing. */
+    this.corners = ctrl.filter(p => p.t).map(p => { const q = { i: 0, s: 0, d: 0, t: 0 }; this.locate(p.x * this.scale, p.y * this.scale, -1, q);
+      return { n: p.t, i: q.i, s: q.s, side: this.kap[q.i] > 0 ? 1 : -1 }; });                     // side +1 = right-hander
+    this.sectorLen = TRACK_LEN / 3;                                                                   // S1 | S2 | S3 boundaries at 0, L/3, 2L/3
+    const low = i => Math.abs(this.kap[i]) < 0.0012; this.straights = []; let st = 0; while (low(st) && st < N) st++;
+    for (let k = 0, run = -1; k <= N; k++) { const i = (st + k) % N, l = low(i) && k < N;
+      if (l && run < 0) run = k; if (!l && run >= 0) { const len = (k - run) * ds; if (len > 300) this.straights.push({ start: ((st + run) % N) * ds, len }); run = -1; } }
+    /* DRS zone = a long straight minus its braking area; the detection line sits 220 m before the zone. */
+    this.drs = this.straights.filter(z => z.len >= 450).map(z => ({ start: (z.start + 30) % L, len: z.len - 150, det: (z.start + 30 - 220 + L) % L }));
+    this.drsFlag = new Uint8Array(N); for (const z of this.drs) for (let i = 0; i < N; i++) if (this.rel(i * ds, z.start) <= z.len) this.drsFlag[i] = 1;
+    this.buildLine();
+  }
+  rel(s, a) { return ((s - a) % this.L + this.L) % this.L; }             // distance from a to s going forward around the lap
+  drsZoneAt(s) { for (let k = 0; k < this.drs.length; k++) if (this.rel(s, this.drs[k].start) <= this.drs[k].len) return k; return -1; }
+
+  /* Racing line by iterative "taut string": each point moves toward the midpoint of its neighbours, projected on its own
+     normal and clamped inside the track. The converged line is the shortest path => it cuts apexes automatically. */
+  buildLine() {
+    const N = this.N, W = HALF - 2.4, o = this.ro = new Float64Array(N);
+    for (let it = 0; it < 500; it++) for (let i = 0; i < N; i++) {
+      const a = (i - 1 + N) % N, b = (i + 1) % N;
+      const mx = (this.x[a] + this.nx[a] * o[a] + this.x[b] + this.nx[b] * o[b]) / 2, my = (this.y[a] + this.ny[a] * o[a] + this.y[b] + this.ny[b] * o[b]) / 2;
+      const t = (mx - this.x[i]) * this.nx[i] + (my - this.y[i]) * this.ny[i];
+      o[i] = clamp(o[i] + (t - o[i]) * 0.6, -W, W);
+    }
+    const lx = this.lx = new Float64Array(N), ly = this.ly = new Float64Array(N);
+    for (let i = 0; i < N; i++) { lx[i] = this.x[i] + this.nx[i] * o[i]; ly[i] = this.y[i] + this.ny[i] * o[i]; }
+    /* Speed profile. Corner limit from v²κ = μ(g + DF·v²)  =>  v = sqrt(μg / (κ − μ·DF)). Then a backward pass (braking)
+       and forward pass (traction) so the target speed is physically reachable everywhere. */
+    const kL = new Float64Array(N), vp = this.vp = new Float64Array(N), mu = PH.MU * 0.93, VMAX = 88;
+    for (let i = 0; i < N; i++) { const a = (i - 3 + N) % N, c = (i + 3) % N;
+      const cr = (lx[i] - lx[a]) * (ly[c] - ly[i]) - (ly[i] - ly[a]) * (lx[c] - lx[i]);
+      const ab = Math.hypot(lx[i] - lx[a], ly[i] - ly[a]), bc = Math.hypot(lx[c] - lx[i], ly[c] - ly[i]), ac = Math.hypot(lx[c] - lx[a], ly[c] - ly[a]);
+      kL[i] = Math.abs(2 * cr / (ab * bc * ac + 1e-9)); }
+    const kS = new Float64Array(N); for (let i = 0; i < N; i++) { let s = 0; for (let k = -2; k <= 2; k++) s += kL[(i + k + N) % N]; kS[i] = s / 5; }
+    for (let i = 0; i < N; i++) { const den = kS[i] - mu * PH.DF; vp[i] = den <= 1e-6 ? VMAX : Math.min(VMAX, Math.sqrt(mu * G / den)); }
+    for (let pass = 0; pass < 3; pass++) {
+      for (let k = 2 * N - 1; k >= 0; k--) { const i = k % N, j = (i + 1) % N; vp[i] = Math.min(vp[i], Math.sqrt(vp[j] * vp[j] + 2 * 30 * this.ds)); }
+      for (let k = 0; k < 2 * N; k++) { const i = k % N, j = (i + 1) % N; vp[j] = Math.min(vp[j], Math.sqrt(vp[i] * vp[i] + 2 * 8 * this.ds)); }
+    }
+  }
+
+  _scan(px, py, a, b) {           // nearest point on the polyline segments a..b (indices wrap)
+    const N = this.N, x = this.x, y = this.y;
+    for (let k = a; k <= b; k++) {
+      const i = ((k % N) + N) % N, j = i + 1 === N ? 0 : i + 1, ax = x[i], ay = y[i], abx = x[j] - ax, aby = y[j] - ay;
+      let t = ((px - ax) * abx + (py - ay) * aby) / (abx * abx + aby * aby); t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const dx = px - (ax + abx * t), dy = py - (ay + aby * t), d2 = dx * dx + dy * dy;
+      if (d2 < this._b) { this._b = d2; this._bi = i; this._bt = t; }
+    }
+  }
+  /* Where is (px,py) relative to the centreline? Returns arc length s, signed lateral offset d (+ = right) and segment i.
+     With a hint only ±25 segments are scanned (cars move < 1 m per step); falls back to a full scan if the hint failed. */
+  locate(px, py, hint, out) {
+    this._b = Infinity;
+    if (hint < 0) this._scan(px, py, 0, this.N - 1);
+    else { this._scan(px, py, hint - 25, hint + 25); if (this._b > 2500) this._scan(px, py, 0, this.N - 1); }
+    const i = this._bi, t = this._bt, cx = this.x[i] + (this.x[(i + 1) % this.N] - this.x[i]) * t, cy = this.y[i] + (this.y[(i + 1) % this.N] - this.y[i]) * t;
+    out.i = i; out.t = t; out.s = (i + t) * this.ds; out.d = (px - cx) * this.nx[i] + (py - cy) * this.ny[i];
+    return out;
+  }
+  surface(d, i) {
+    const a = Math.abs(d), side = d > 0 ? 1 : -1;
+    if (a <= HALF) return SURF.asphalt;
+    if (a <= HALF + SHOULDER) return this.kerb[i] ? SURF.kerb : SURF.shoulder;
+    if (this.gravel[i] === side && a <= HALF + SHOULDER + 8) return SURF.gravel;
+    return SURF.grass;
+  }
+  posAt(s, off = 0) {
+    const N = this.N; s = ((s % this.L) + this.L) % this.L; const f = s / this.ds, i = Math.floor(f) % N, j = (i + 1) % N, t = f - Math.floor(f);
+    const nx = lerp(this.nx[i], this.nx[j], t), ny = lerp(this.ny[i], this.ny[j], t);
+    return { x: lerp(this.x[i], this.x[j], t) + nx * off, y: lerp(this.y[i], this.y[j], t) + ny * off, h: Math.atan2(lerp(this.ty[i], this.ty[j], t), lerp(this.tx[i], this.tx[j], t)), i };
+  }
+}
+
+/* --------------------------------------------------------------- 3. TYRES */
+const COMPOUNDS = { S: { name: 'SOFT', col: '#ff3b30', grip: 1.09, wear: 1.7 }, M: { name: 'MEDIUM', col: '#ffd60a', grip: 1.0, wear: 1.0 }, H: { name: 'HARD', col: '#ffffff', grip: 0.94, wear: 0.6 } };
+/* Grip = compound × wear factor × temperature window (peak at ~95 °C). Heat comes from cornering load and braking, and
+   bleeds off to the air; cold tyres (start) and overheated/worn tyres both lose grip. */
+class Tyres {
+  constructor(c) { this.setCompound(c); }
+  setCompound(c) { this.comp = COMPOUNDS[c] || COMPOUNDS.M; this.wear = 0; this.temp = 62; }
+  grip() { const tf = clamp(1 - 0.20 * Math.pow((this.temp - 95) / 45, 2), 0.72, 1); return this.comp.grip * (1 - 0.36 * Math.pow(this.wear, 1.3)) * tf; }
+  update(dt, aLat, aBrake, slip) {
+    this.temp += (0.36 * aLat + 0.28 * aBrake + 1.3 * slip - 0.10 * (this.temp - 35)) * dt;   // heat in (cornering, braking, sliding) - cooling to ambient 35 C
+    this.wear = clamp(this.wear + dt * this.comp.wear * (0.0033 * Math.pow(aLat / 30, 2) + 0.0009 * aBrake / 30 + 0.0006 * slip), 0, 1);
+  }
+}
+
+/* -------------------------------------------------------- 4. CAR + PHYSICS */
+class Car {
+  constructor(o) {
+    Object.assign(this, { name: 'CAR', code: 'CAR', col: [200, 30, 30], acc: [255, 255, 255], isPlayer: false, skill: 1, lane: 0 }, o);
+    this.tyre = new Tyres(o && o.tyre || 'M'); this.loc = { i: 0, s: 0, d: 0, t: 0 }; this._l = { i: 0, s: 0, d: 0, t: 0 };
+    this.reset(0, 0, 0);
+  }
+  reset(x, y, h) {
+    this.x = x; this.y = y; this.h = h; this.vx = 0; this.vy = 0; this.w = 0; this.steer = 0; this.hint = -1;
+    this.thr = 0; this.brk = 0; this.aLat = 0; this.aLong = 0; this.slip = 0; this.hit = 0; this.impact = 0; this.surf = SURF.asphalt; this.off = 0;
+    this.stuck = 0; this.drsOpen = false; this.drsElig = []; this.drsPrevS = 0; this.mist = 0; this.mistCd = 8; this.ov = null; this.defT = 0; this.defCd = 0; this.side_t = 0; this.wrongT = 0; this.dist = 0; this.prevS = 0; this.finished = false; this.finishT = Infinity; this.smoke = 0; this.sparks = 0; this.rough = 0;
+    this.tm = { maxK: 0, lapStart: 0, secStart: 0, sec: [null, null, null], lastSec: [null, null, null], best: Infinity, last: null, laps: 0, bestSec: [Infinity, Infinity, Infinity], lineT: null };
+  }
+  get speed() { return this.vx * Math.cos(this.h) + this.vy * Math.sin(this.h); }
+  get speedAbs() { return Math.hypot(this.vx, this.vy); }
+
+  /* One fixed physics step. Arcade "slip" model:
+       - velocity is kept in world space (inertia); the body frame is only used to apply forces;
+       - lateral tyre force = −k·v_lateral, saturated at μ(g + downforce·v²)  => beyond that the car slides (understeer);
+       - longitudinal force (engine/brake) shares the same budget via a friction circle;
+       - yaw rate follows the steering geometry ω = v·tan δ / wheelbase, with δ shrinking as speed grows. */
+  step(dt, track, inp) {
+    const c = Math.cos(this.h), s = Math.sin(this.h), L = this._l;
+    let vf = this.vx * c + this.vy * s, vr = -this.vx * s + this.vy * c;
+    /* surface under each wheel */
+    let mu = 0, drag = 0, rough = 0, off = 0, surf = SURF.asphalt, worst = 2;
+    if (this.hint < 0) { track.locate(this.x, this.y, -1, L); this.hint = L.i; }
+    for (const w of WHEELS) {
+      track.locate(this.x + c * w[0] - s * w[1], this.y + s * w[0] + c * w[1], this.hint, L);
+      const sf = track.surface(L.d, L.i); mu += sf.mu; drag += sf.drag; rough += sf.rough; if (Math.abs(L.d) > HALF) off++;
+      if (sf.mu < (surf === SURF.asphalt ? 2 : surf.mu)) surf = sf;
+    }
+    mu /= 4; drag /= 4; rough /= 4; this.off = off; this.surf = surf; this.rough = rough * Math.min(1, Math.abs(vf) / 25);
+
+    const av = Math.abs(vf), grip = this.tyre.grip();
+    /* DRS: an open rear-wing flap removes 45 % of drag and 25 % of downforce (higher top speed, less cornering grip). */
+    const dk = this.drsOpen ? 1 : 0, dfk = PH.DF * (1 - 0.25 * dk), dragK = PH.DRAG * (1 - 0.45 * dk);
+    const latMax = PH.MU * grip * mu * (G + dfk * vf * vf);       // available lateral acceleration (m/s²)
+    /* steering: rate-limited input -> front wheel angle -> desired yaw rate */
+    const tgt = clamp(inp.steer, -1, 1), rate = ((tgt === 0 || Math.sign(tgt) !== Math.sign(this.steer)) ? 9 : 5.5) / (1 + av / 45);   // rate-limited, slower at speed
+    this.steer += clamp(tgt - this.steer, -rate * dt, rate * dt);
+    const delta = this.steer * steerLock(av);
+    let wd = vf * Math.tan(delta) / CAR.WB + 1.2 * Math.atan2(vr, av + 4) * (vf < 0 ? -1 : 1);   // + weathercock self-aligning
+    const wmax = 1.3 * latMax / Math.max(av, 6); wd = clamp(wd, -wmax, wmax);
+    this.w += (wd - this.w) * Math.min(1, dt * 10);
+
+    /* lateral force (saturating) and friction-circle share left for the pedals */
+    const aLat = clamp(-vr * PH.KLAT, -latMax, latMax), use = Math.abs(aLat) / Math.max(latMax, 1);
+    const cap = PH.MU * grip * mu * (G + dfk * vf * vf) * Math.sqrt(Math.max(0.05, 1 - 0.8 * use * use));
+    const thr = clamp(inp.throttle, 0, 1), brk = clamp(inp.brake, 0, 1);
+    let aLong = 0, brakeDec = 0;
+    if (brk > 0) { if (vf > 0.6) { brakeDec = Math.min(PH.BRK * brk, cap * 1.1); aLong -= brakeDec; } else if (vf > -14) aLong -= Math.min(9, cap) * brk; }
+    else if (thr > 0) aLong += Math.min(PH.ENG * Math.max(0, 1 - Math.max(vf, 0) / PH.VENG) * thr, cap);
+    const sg = av > 0.2 ? Math.sign(vf) : 0;
+    const aRes = -(dragK * vf * av + PH.ROLL * sg + drag * vf) - sg * 0.11 * Math.abs(aLat);   // drag, rolling, surface, induced (scrub)
+    const af = aLong + aRes;
+    this.vx += (af * c - aLat * s) * dt; this.vy += (af * s + aLat * c) * dt;
+    if (thr === 0 && brk === 0 && this.speedAbs < 0.25) { this.vx = 0; this.vy = 0; }
+    this.x += this.vx * dt; this.y += this.vy * dt; this.h += this.w * dt;
+    this.aLat = aLat; this.aLong = af; this.thr = thr; this.brk = brk;
+    this.slip = clamp(Math.abs(vr) - 1.5, 0, 20) * (Math.abs(aLat) > 0.9 * latMax ? 1 : 0.3);
+    this.tyre.update(dt, Math.abs(aLat), brakeDec, this.slip);
+
+    /* barriers: test the four body corners against the wall line; push out, reflect the normal velocity, add spin */
+    const c2 = Math.cos(this.h), s2 = Math.sin(this.h), lim = HALF + WALL - 0.3; this.hit = Math.max(0, this.hit - dt); this.impact = 0;
+    for (const k of CORNERS) {
+      const px = this.x + c2 * k[0] - s2 * k[1], py = this.y + s2 * k[0] + c2 * k[1];
+      track.locate(px, py, this.hint, L); const ad = Math.abs(L.d);
+      if (ad > lim) {
+        const sgn = L.d > 0 ? 1 : -1, nx = track.nx[L.i] * sgn, ny = track.ny[L.i] * sgn, pen = ad - lim;
+        this.x -= nx * pen; this.y -= ny * pen;
+        const vn = this.vx * nx + this.vy * ny;
+        if (vn > 0) {
+          this.vx -= 1.12 * vn * nx; this.vy -= 1.12 * vn * ny;
+          const tx = -ny, ty = nx, vt = this.vx * tx + this.vy * ty; this.vx -= vt * tx * 0.12; this.vy -= vt * ty * 0.12;   // wall scrape
+          const rx = px - this.x, ry = py - this.y; this.w = clamp(this.w - (rx * ny - ry * nx) * vn * 0.03, -2.5, 2.5);
+          this.impact = Math.max(this.impact, vn); this.hit = 1.2; this.tyre.wear = clamp(this.tyre.wear + vn * 0.0004, 0, 1);
+          this.sparkAt = [px, py];
+        }
+      }
+    }
+    track.locate(this.x, this.y, this.hint, L); this.hint = L.i; this.loc.i = L.i; this.loc.s = L.s; this.loc.d = L.d; this.loc.t = L.t;
+  }
+  respawn(track) {            // marshals lift the car back onto the racing line, facing forward
+    const p = track.posAt(this.loc.s, track.ro[this.loc.i] * 0.5);
+    this.x = p.x; this.y = p.y; this.h = p.h; this.vx = Math.cos(p.h) * 6; this.vy = Math.sin(p.h) * 6; this.w = 0; this.steer = 0; this.stuck = 0; this.hint = -1;
+  }
+}
+
+/* ---------------------------------------------------------------- 5. AI */
+/* Each driver has a personality: pace (fraction of the planned speed profile it dares to use), aggression (willingness to
+   attack / defend) and consistency (rarity of mistakes). Difficulty scales pace and mistake rate.
+   Steering = pure pursuit toward a look-ahead point on the racing line (+ a lateral lane offset):
+       δ = atan(2·WB·sin α / ld)     (α = angle to the look-ahead point, ld = distance to it)
+   Speed  = planned profile ahead × pace × tyre-grip factor, limited by traffic. All AI cars run the SAME Car.step physics. */
+const DEFAULT_PER = { pace: 0.96, aggr: 0.6, cons: 1 };
+function drive(car, track, race, dt, skill) {
+  const N = track.N, ds = track.ds, v = Math.max(0, car.speed), i0 = car.hint < 0 ? 0 : car.hint, per = car.per || DEFAULT_PER, W = HALF - 1.7;
+  const kAhead = track.kap[(i0 + 45) % N], straightNow = Math.abs(track.kap[i0]) < 0.0015 && Math.abs(kAhead) < 0.0015;
+  /* ---- traffic scan: nearest car ahead / behind that overlaps our lane ---- */
+  let ahead = null, aGap = 1e9, behind = null, bGap = 1e9, beside = null;
+  if (race) for (const o of race.cars) { if (o === car || o.finished) continue;
+    const g = o.dist - car.dist, dl = o.loc.d - car.loc.d;
+    if (Math.abs(g) < 4 && Math.abs(dl) < 3.4) beside = o;
+    if (g > 0.5 && g < 45 && Math.abs(dl) < 3.4 && g < aGap) { ahead = o; aGap = g; }
+    if (g < -0.5 && g > -30 && Math.abs(dl) < 4.5 && -g < bGap) { behind = o; bGap = -g; } }
+  /* ---- overtaking: commit to one side for at least 2.5 s, only if that side has room and we are closing ---- */
+  if (car.ov) { car.ov.t -= dt; const o = car.ov.who, g = o.dist - car.dist; if ((car.ov.t <= 0 && g < -6) || g < -14 || g > 60) car.ov = null; }
+  if (!car.ov && ahead && aGap < 26 && v - ahead.speed > -3 && car.defT <= 0 && (race ? race.state === 'racing' : true) && per.aggr > 0.25) {
+    const inside = track.kap[(i0 + 60) % N] > 0 ? 1 : -1, cand = [inside, -inside]; let side = 0;
+    for (const sd of cand) { const lat = ahead.loc.d + sd * 3.2; if (Math.abs(lat) <= W) { side = sd; break; } }
+    if (side) car.ov = { who: ahead, side, t: 2.5 };
+  }
+  /* ---- defending: at most one lateral move per straight, toward the attacker's side, then a cooldown ---- */
+  car.defT = Math.max(0, car.defT - dt); car.defCd = Math.max(0, car.defCd - dt);
+  if (car.defT <= 0 && car.defCd <= 0 && straightNow && behind && bGap < 14 && per.aggr > 0.45 && !car.ov && car.dist > 0) { car.defT = 2.5; car.defCd = 9; car.defSide = Math.sign(behind.loc.d - car.loc.d) || 1; }
+  /* ---- desired lane (offset from the racing line), rate-limited so cars glide instead of teleporting ---- */
+  let want = 0;
+  if (car.ov) { const o = car.ov.who; want = clamp(o.loc.d + car.ov.side * 3.2, -W, W) - track.ro[i0]; }
+  else if (car.defT > 0) want = clamp(car.defSide * 2.0, -2.4, 2.4);
+  const room = W - Math.abs(track.ro[i0]); want = clamp(want, -W - track.ro[i0], W - track.ro[i0]);
+  let dLane = clamp(want - car.lane, -2.4 * dt, 2.4 * dt);
+  if (beside && Math.sign(dLane) === Math.sign(beside.loc.d - car.loc.d) && Math.abs(beside.loc.d - car.loc.d) < 3.2) dLane = 0;   // never steer into a car alongside
+  car.lane += dLane;
+  /* ---- steering ---- */
+  const ld = 7 + 0.3 * v, ti = (i0 + Math.round(ld / ds)) % N, lat = clamp(track.ro[ti] + car.lane, -W, W);
+  const tx = track.x[ti] + track.nx[ti] * lat, ty = track.y[ti] + track.ny[ti] * lat;
+  const c = Math.cos(car.h), s = Math.sin(car.h), dx = tx - car.x, dy = ty - car.y, lf = dx * c + dy * s, lr = -dx * s + dy * c;
+  const alpha = Math.atan2(lr, Math.max(lf, 0.3)), dist = Math.max(3, Math.hypot(dx, dy));
+  const delta = Math.atan(2 * CAR.WB * Math.sin(alpha) / dist), dmax = steerLock(v);
+  const steer = clamp(delta / dmax, -1, 1);
+  /* ---- target speed ---- */
+  const gripF = Math.min(1, Math.sqrt(car.tyre.grip() / 0.93));            // worn / cold / hot tyres => lift earlier
+  let vt = track.vp[(i0 + Math.round(v * 0.2 / ds)) % N] * skill * gripF;
+  car.mist = Math.max(0, car.mist - dt); car.mistCd = Math.max(0, car.mistCd - dt);
+  const brakeAhead = track.vp[(i0 + Math.round(v * 1.3 / ds)) % N] < v * 0.85;   // a braking zone is coming up (the only place a late-braking error can happen)
+  if (race && race.state === 'racing' && car.mistCd <= 0 && brakeAhead && v > 35 && Math.random() < dt * 0.08 * (1 - per.cons) * (race.mistake || 1)) { car.mist = 1.6; car.mistCd = 30; }
+  if (car.mist > 0) vt *= 1.14;                                              // a mistake = braking too late => runs wide / locks up
+  if (Math.abs(car.loc.d - track.ro[i0]) > 6 || car.off > 2) vt = Math.min(vt, 26);   // off-line or off-track: recover gently
+  if (ahead && !car.ov) vt = Math.min(vt, Math.max(ahead.speed + (aGap - 7) * 0.6, 8));  // follow, don't rear-end
+  if (ahead && car.ov && aGap < 9 && Math.abs(ahead.loc.d - car.loc.d) < 2.7) vt = Math.min(vt, Math.max(ahead.speed, 8));
+  /* side-by-side too long? the slower-paced driver yields */
+  car.side_t = beside ? car.side_t + dt : 0; if (car.side_t > 3.5 && per.pace <= (beside.per || DEFAULT_PER).pace) vt *= 0.9;
+  const err = vt - v; let throttle = 0, brake = 0;
+  if (err > 0) throttle = clamp(err * 0.4 + 0.15, 0, 1); else brake = clamp(-err / 6, 0, 1);
+  return { steer, throttle, brake };
+}
+
+/* ---------------------------------------------------------------- 6. RACE */
+/* Driver roster. pace = share of the planned speed profile used, aggr = attack/defend appetite, cons = consistency. */
+const DRIVERS = [
+  { name: 'You', code: 'YOU', col: [225, 6, 0], acc: [255, 255, 255] },
+  { name: 'Nova', code: 'NOV', col: [0, 160, 255], acc: [255, 255, 255], per: { pace: 0.985, aggr: 0.55, cons: 0.90 } },
+  { name: 'Kairo', code: 'KAI', col: [255, 140, 0], acc: [20, 20, 20], per: { pace: 0.975, aggr: 0.90, cons: 0.72 } },
+  { name: 'Arisu', code: 'ARI', col: [30, 190, 120], acc: [255, 255, 255], per: { pace: 0.965, aggr: 0.40, cons: 0.97 } },
+  { name: 'Tanaka', code: 'TAN', col: [180, 90, 255], acc: [255, 255, 255], per: { pace: 0.955, aggr: 0.70, cons: 0.85 } },
+  { name: 'Mei', code: 'MEI', col: [255, 70, 150], acc: [255, 255, 255], per: { pace: 0.945, aggr: 0.50, cons: 0.80 } },
+  { name: 'Soren', code: 'SOR', col: [240, 240, 245], acc: [30, 30, 40], per: { pace: 0.935, aggr: 0.85, cons: 0.68 } },
+  { name: 'Ruxin', code: 'RUX', col: [255, 214, 10], acc: [20, 20, 20], per: { pace: 0.925, aggr: 0.60, cons: 0.92 } }];
+/* Difficulty: scales AI pace and mistake rate (both really used by drive()). */
+const DIFF = { rookie: { pace: 0.955, mistake: 1.8 }, pro: { pace: 1.0, mistake: 1.0 }, legend: { pace: 1.012, mistake: 0.45 } };
+const DRS_MIN_DIST_FRAC = 1 / 3;     // DRS is enabled once a car has completed the first sector of the race
+const DRS_GAP = 1.0;                 // seconds behind the car ahead at the detection line
+
+class Race {
+  constructor(track, opts = {}) { this.track = track; this.events = []; this.ghost = null; this.bestOverall = [Infinity, Infinity, Infinity];
+    this.autopilot = !!opts.autopilot; this.input = { throttle: 0, brake: 0, steer: 0 }; this.laps = 3; this.tyreC = 'M'; this.diff = 'pro'; this.newRace(opts); this.state = 'menu'; this.status = 'MENU'; }
+
+  /* (re)build the grid. Slot k sits 9.5 m behind slot k-1, alternating left/right. Player starts P5 of 8. */
+  newRace(opts = {}) {
+    const T = this.track; this.laps = opts.laps || this.laps; this.tyreC = opts.tyre || this.tyreC; this.diff = opts.diff || this.diff; const D = DIFF[this.diff];
+    this.state = 'grid'; this.t = 0; this.raceT = 0; this.lightsOut = 0; this.lit = 0; this.cars = []; this.events.length = 0; this.status = 'ON THE GRID'; this.statusLvl = ''; this.mistake = D.mistake; this.finishedAt = null;
+    const order = [1, 2, 3, 4, 0, 5, 6, 7];               // driver index by grid slot (player = slot 4 => P5)
+    order.forEach((di, k) => {
+      const d = DRIVERS[di], car = new Car({ ...d, isPlayer: di === 0, tyre: di === 0 ? this.tyreC : 'MMH'[k % 3], per: d.per || DEFAULT_PER, skill: di === 0 ? 1 : d.per.pace * D.pace });
+      const s = T.L - 9 - k * 9.5, p = T.posAt(s, (k % 2 ? 3.4 : -3.4));
+      car.reset(p.x, p.y, p.h); car.dist = s - T.L; car.prevS = s; car.drsPrevS = s; car.lane = 0; car.gridSlot = k; this.cars.push(car);
+      T.locate(car.x, car.y, -1, car.loc); car.hint = car.loc.i; if (di === 0) this.player = car;
+    });
+    this.rec = null; this.recT = 0; this.order = null; this.rank();
+  }
+  startCountdown() { this.newRace(); this.state = 'grid'; this.t = 0; this.status = 'ON THE GRID'; }
+
+  /* Race order: finished cars by finishing time, then everybody else by total progress (unwrapped distance, which already
+     encodes completed laps + position in the lap and drops when a car drives backwards). Ties keep the previous order. */
+  rank() {
+    const prev = new Map(this.order ? this.order.map((c, i) => [c, i]) : []);
+    const cs = this.cars.slice().sort((a, b) => (a.finished !== b.finished) ? (a.finished ? -1 : 1)
+      : a.finished ? (a.finishT - b.finishT || (prev.get(a) || 0) - (prev.get(b) || 0))
+      : (Math.abs(b.dist - a.dist) < 0.25 ? (prev.get(a) || 0) - (prev.get(b) || 0) : b.dist - a.dist));
+    cs.forEach((c, i) => c.pos = i + 1); this.order = cs;
+  }
+
+  tick(dt) {
+    const T = this.track;
+    if (this.state === 'menu') return;
+    if (this.state === 'grid') { this.t += dt; if (this.t >= 1.5) { this.state = 'countdown'; this.t = 0; this.lightsOut = 5.2 + Math.random() * 1.4; this.status = 'LIGHTS'; } }
+    else if (this.state === 'countdown') { this.t += dt; this.lit = Math.min(5, Math.floor(this.t)); if (this.t >= this.lightsOut) { this.state = 'racing'; this.lit = 0; this.raceT = 0; this.status = 'GREEN FLAG'; this.events.push({ type: 'go' }); } }
+    else this.raceT += dt;
+    const live = this.state === 'racing' || this.state === 'finished';
+    for (const car of this.cars) {
+      if (!live) { T.locate(car.x, car.y, car.hint, car._l); continue; }         // cars are held on the grid
+      let inp;
+      if (car.finished || (car.isPlayer && this.autopilot)) inp = drive(car, T, this, dt, car.finished ? 0.5 : (car.isPlayer ? 0.96 : car.skill));
+      else if (car.isPlayer) inp = this.input; else inp = drive(car, T, this, dt, car.skill);
+      this.updateDrs(car, inp);
+      car.step(dt, T, inp);
+      if (!car.isPlayer || this.autopilot) this.recover(car, dt);
+    }
+    if (live) { this.collide(); for (const car of this.cars) this.progress(car, dt); this.rank(); this.playerStatus(); }
+  }
+
+  /* Computer-driven cars: respawn when stuck (against a wall / spun facing backwards) for several seconds. */
+  recover(car, dt) {
+    const T = this.track, i = car.hint < 0 ? 0 : car.hint, fwd = Math.cos(car.h) * T.tx[i] + Math.sin(car.h) * T.ty[i];
+    if (this.state === 'racing' && car.speedAbs < 2) car.stuck += dt; else car.stuck = 0;
+    car.wrongT = (fwd < -0.3 && car.speedAbs < 12) ? car.wrongT + dt : 0;
+    if (car.stuck > 3 || car.wrongT > 2) { car.respawn(T); car.ov = null; car.lane = 0; }
+  }
+
+  /* DRS (Drag Reduction System). At the detection line a car is eligible if it is within DRS_GAP seconds of the car ahead
+     (and the race has passed its first sector). Eligible + inside a zone + full throttle + not braking => flap opens; it
+     closes on braking or at the end of the zone, where eligibility is also cleared. */
+  updateDrs(car, inp) {
+    const T = this.track, s = car.loc.s;
+    for (let k = 0; k < T.drs.length; k++) { const z = T.drs[k], a = T.rel(car.drsPrevS, z.det), b = T.rel(s, z.det);
+      if (a > T.L * 0.75 && b < T.L * 0.25) {                                      // just crossed the detection line going forward
+        const idx = this.order.indexOf(car), ah = idx > 0 ? this.order[idx - 1] : null;
+        car.drsElig[k] = !!ah && car.dist > T.L * DRS_MIN_DIST_FRAC && !ah.finished && (ah.dist - car.dist) / Math.max(car.speed, 25) <= DRS_GAP;
+      }
+      const r = T.rel(s, z.start); if (r > z.len && r < T.L - 230) car.drsElig[k] = false;   // past the end of the zone
+    }
+    car.drsPrevS = s;
+    const k = T.drsZoneAt(s);
+    car.drsOpen = k >= 0 && !!car.drsElig[k] && inp.throttle > 0.85 && inp.brake < 0.1 && car.speed > 20;
+    car.drsZone = k;
+  }
+
+  /* Car-vs-car: two circles per car (nose/tail). Overlap is resolved by pushing both apart and exchanging the normal
+     component of relative velocity (equal masses, restitution 0.2). Impulses are clamped for high-speed stability. */
+  collide() {
+    const cs = this.cars, R = 1.15;
+    for (let a = 0; a < cs.length; a++) for (let b = a + 1; b < cs.length; b++) {
+      const A = cs[a], B = cs[b]; if (Math.abs(A.x - B.x) > 8 || Math.abs(A.y - B.y) > 8) continue;
+      const ca = Math.cos(A.h), sa = Math.sin(A.h), cb = Math.cos(B.h), sb = Math.sin(B.h);
+      for (const ka of [1.4, -1.4]) for (const kb of [1.4, -1.4]) {
+        const ax = A.x + ca * ka, ay = A.y + sa * ka, bx = B.x + cb * kb, by = B.y + sb * kb; let dx = bx - ax, dy = by - ay; const d = Math.hypot(dx, dy);
+        if (d < 2 * R && d > 1e-4) {
+          dx /= d; dy /= d; const pen = Math.min((2 * R - d) / 2, 0.6); A.x -= dx * pen; A.y -= dy * pen; B.x += dx * pen; B.y += dy * pen;
+          const rv = (B.vx - A.vx) * dx + (B.vy - A.vy) * dy;
+          if (rv < 0) { const j = Math.min(-(1.2) * rv / 2, 12); A.vx -= j * dx; A.vy -= j * dy; B.vx += j * dx; B.vy += j * dy; A.hit = B.hit = Math.max(A.hit, 0.4); A.impact = B.impact = Math.max(A.impact, -rv); A.sparkAt = B.sparkAt = [ax + dx * R, ay + dy * R];
+            A.w = clamp(A.w + (dx * sa - dy * ca) * j * 0.01, -2.5, 2.5); B.w = clamp(B.w - (dx * sb - dy * cb) * j * 0.01, -2.5, 2.5); }
+        }
+      }
+    }
+  }
+
+  /* Progress uses an unwrapped distance: every step adds the wrapped change in arc length s, so driving backwards subtracts.
+     Lap/sector boundaries are crossed once, in order (maxK), so reversing back and forth over the line cannot score. The
+     crossing instant is interpolated inside the step for sub-millisecond timing. */
+  progress(car, dt) {
+    const T = this.track, prev = car.dist; let ds = car.loc.s - car.prevS; if (ds < -T.L / 2) ds += T.L; else if (ds > T.L / 2) ds -= T.L;
+    car.dist += ds; car.prevS = car.loc.s; const B = T.L / 3, tm = car.tm, kNow = Math.floor(car.dist / B);
+    /* first crossing of the line (dist 0): the player's ghost recording starts here */
+    if (car.isPlayer && tm.lineT == null && prev < 0 && car.dist >= 0) { const f = (0 - prev) / (car.dist - prev); tm.lineT = this.raceT - dt + f * dt; this.rec = []; this.recT = 0; }
+    while (tm.maxK < kNow) {
+      const k = ++tm.maxK, f = (k * B - prev) / (car.dist - prev), tc = this.raceT - dt + f * dt, si = (k - 1) % 3;
+      tm.sec[si] = tc - tm.secStart; tm.secStart = tc; tm.lastSec[si] = tm.sec[si];
+      const purple = tm.sec[si] < this.bestOverall[si]; if (purple) this.bestOverall[si] = tm.sec[si];
+      const green = tm.sec[si] < tm.bestSec[si]; if (green) tm.bestSec[si] = tm.sec[si];
+      if (car.isPlayer) this.events.push({ type: 'sector', i: si, t: tm.sec[si], purple, green });
+      if (k % 3 === 0) {
+        const lap = k / 3, lt = tc - tm.lapStart; tm.last = lt; tm.lapStart = tc; tm.laps = lap; tm.sec = [null, null, null];
+        const isBest = lt < tm.best; if (isBest) tm.best = lt;
+        if (car.isPlayer) {
+          this.events.push({ type: 'lap', lap, t: lt, best: isBest });
+          const lineLap = tm.lineT != null ? tc - tm.lineT : Infinity;   // line-to-line time (lap 1 also contains the standing start)
+          if (this.rec && this.rec.length > 8 && lineLap < (this.ghost ? this.ghost.time : Infinity)) this.ghost = this.makeGhost(this.rec, lineLap);
+          tm.lineT = tc; this.rec = []; this.recT = 0;
+        }
+        if (lap >= this.laps && !car.finished) { car.finished = true; car.finishT = tc;
+          if (car.isPlayer) { this.state = 'finished'; this.status = 'CHEQUERED FLAG'; this.finishedAt = this.raceT; this.events.push({ type: 'finish' }); } }
+      }
+    }
+    if (car.isPlayer && this.rec && tm.lineT != null) { this.recT += dt; if (this.recT >= 0.05) { this.recT = 0; this.rec.push(this.raceT - tm.lineT, car.x, car.y, car.h, car.loc.s); } }
+  }
+  /* Ghost = the position samples of the best lap + a time-vs-distance profile (every 20 m) used for the live delta. */
+  makeGhost(rec, time) {
+    const nb = Math.ceil(this.track.L / 20) + 1, prof = new Float64Array(nb).fill(NaN); let j = 0;
+    for (let b = 0; b < nb; b++) { const sb = b * 20; while (j + 5 < rec.length && rec[j + 5 + 4] < sb) j += 5;
+      if (j + 5 >= rec.length) break; const s0 = rec[j + 4], s1 = rec[j + 5 + 4], t0 = rec[j], t1 = rec[j + 5]; prof[b] = t0 + (t1 - t0) * clamp((sb - s0) / Math.max(s1 - s0, 1e-6), 0, 1); }
+    return { rec: rec.slice(), time, prof };
+  }
+  ghostAt(t) {      // interpolated ghost pose at lap-clock t
+    const g = this.ghost; if (!g) return null; const r = g.rec, n = r.length / 5; if (n < 2 || t < 0 || t > g.time + 0.5) return null;
+    let lo = 0, hi = n - 1; while (lo < hi - 1) { const m = (lo + hi) >> 1; if (r[m * 5] <= t) lo = m; else hi = m; }
+    const f = clamp((t - r[lo * 5]) / Math.max(r[hi * 5] - r[lo * 5], 1e-6), 0, 1);
+    return { x: lerp(r[lo * 5 + 1], r[hi * 5 + 1], f), y: lerp(r[lo * 5 + 2], r[hi * 5 + 2], f), h: r[lo * 5 + 3] + wrap(r[hi * 5 + 3] - r[lo * 5 + 3]) * f };
+  }
+  delta() {       // live gap to the ghost lap at the same track position (positive = slower than the ghost)
+    const p = this.player, tm = p.tm, g = this.ghost; if (!g || tm.lineT == null || this.state !== 'racing') return null;
+    const f = p.loc.s / 20, b = Math.floor(f), t0 = g.prof[b], t1 = g.prof[b + 1]; if (!isFinite(t0) || !isFinite(t1)) return null;
+    return (this.raceT - tm.lineT) - lerp(t0, t1, f - b);
+  }
+  drsState(car) {   // 'off' | 'ready' | 'open'   (ready = eligible for a zone that is coming up or in progress)
+    if (car.drsOpen) return 'open';
+    for (let k = 0; k < this.track.drs.length; k++) if (car.drsElig[k]) return 'ready'; return 'off';
+  }
+  playerStatus() {
+    if (this.state === 'finished') return; const p = this.player, T = this.track; let s = 'GREEN FLAG', lvl = '';
+    const hx = Math.cos(p.h) * T.tx[p.hint] + Math.sin(p.h) * T.ty[p.hint];
+    if (p.hit > 0.3) { s = 'BARRIER CONTACT'; lvl = 'r'; } else if (hx < -0.3 && p.speedAbs > 4) { s = 'WRONG WAY'; lvl = 'r'; }
+    else if (p.off >= 4) { s = p.surf === SURF.gravel ? 'GRAVEL TRAP' : 'OFF TRACK'; lvl = 'y'; } else if (p.surf === SURF.kerb) { s = 'KERB'; lvl = 'w'; }
+    else if (p.drsOpen) { s = 'DRS OPEN'; lvl = 'g'; }
+    this.status = s; this.statusLvl = lvl;
+  }
+}
+
+/* ============================ browser-only code below ============================ */
+const HAS_DOM = typeof document !== 'undefined' && !!document.getElementById('scene');
+const api = { Track, Car, Race, drive, CTRL, PH, HALF, WALL, SHOULDER, SURF, TRACK_LEN, COMPOUNDS, DRIVERS, DIFF, fmt };
+if (typeof globalThis !== 'undefined') globalThis.F1 = api;
+if (!HAS_DOM) return;
+
+/* -------------------------------------------------------------- 7. RENDERER */
+/* Pseudo-3D: a real perspective camera (yaw, pitch, FOV) projects world triangles/quads onto a 2-D canvas.
+   Everything visible is collected into a list, sorted far→near by camera depth (painter's algorithm), clipped against the
+   near plane (Sutherland–Hodgman) and filled. Distance fog blends every colour into the night-sky colour. */
+const NEAR = 0.4, VIEW = 760, FOG = [9, 14, 30], FOG_S = 90, FOG_E = 740;
+const LAYERS = [[22, 62, 38], [27, 72, 44], [128, 112, 82], [72, 76, 90], [214, 40, 44], [236, 236, 242], [62, 66, 78], [66, 70, 83], [50, 54, 65], [228, 231, 238], [58, 70, 96], [214, 216, 226], [200, 34, 40], [20, 24, 34], [34, 197, 94], [255, 214, 10], [47, 124, 246]];
+const LY = { GA: 0, GB: 1, GRAVEL: 2, SHOULDER: 3, KR: 4, KW: 5, AA: 6, AB: 7, RUBBER: 8, LINE: 9, WA: 10, WB: 11, WR: 12, WTOP: 13, DRS: 14, SEC_Y: 15, SEC_B: 16 };
+const layerStr = LAYERS.map(c => Array.from({ length: 16 }, (_, k) => { const f = k / 15; return `rgb(${(c[0] * (1 - f) + FOG[0] * f) | 0},${(c[1] * (1 - f) + FOG[1] * f) | 0},${(c[2] * (1 - f) + FOG[2] * f) | 0})`; }));
+const fogF = d => { const f = (d - FOG_S) / (FOG_E - FOG_S); return f < 0 ? 0 : f > 1 ? 1 : f; };
+const LS = (layer, d) => layerStr[layer][(fogF(d) * 15) | 0];
+const mixRGB = (c, d, sh) => { const f = fogF(d); return `rgb(${(c[0] * sh * (1 - f) + FOG[0] * f) | 0},${(c[1] * sh * (1 - f) + FOG[1] * f) | 0},${(c[2] * sh * (1 - f) + FOG[2] * f) | 0})`; };
+
+class Renderer {
+  constructor(canvas, track) {
+    this.cv = canvas; this.ctx = canvas.getContext('2d'); this.T = track; this.items = []; this.CV = new Float64Array(48); this.CO = new Float64Array(96); this.SX = new Float64Array(32); this.SY = new Float64Array(32);
+    this.cam = { x: 0, y: 0, z: 3, yaw: 0, pitch: 0.1, f: 600, cx: 0, cy: 0, fx: 1, fy: 0, rx: 0, ry: 1, cp: 1, sp: 0 };
+    this.parts = []; this.assist = false; this.build(); this.resize();
+  }
+  resize() { const dpr = Math.min(window.devicePixelRatio || 1, 1.5), w = this.cv.clientWidth, h = this.cv.clientHeight;
+    this.cv.width = Math.max(2, w * dpr | 0); this.cv.height = Math.max(2, h * dpr | 0); this.W = this.cv.width; this.H = this.cv.height; this.dpr = dpr; }
+
+  /* ---- static scenery (deterministic) ---- */
+  build() {
+    const T = this.T, R = rng(7), sc = this.scene = [], N = T.N;
+    const box = (x, y, yaw, l, w, h, col, o = {}) => sc.push({ k: 1, x, y, yaw, l, w, h, z0: o.z0 || 0, col, seat: o.seat || 0, emis: o.emis || 0, far: o.far || 420, win: o.win || 0 });
+    const at = (i, off) => ({ x: T.x[i] + T.nx[i] * off, y: T.y[i] + T.ny[i] * off, yaw: Math.atan2(T.ty[i], T.tx[i]) });
+    /* grandstands + pit building along the start straight */
+    for (let k = -70; k <= 55; k += 6) { const i = (k + N) % N;
+      const r = at(i, HALF + WALL + 9); box(r.x, r.y, r.yaw, 22, 14, 9 + (k % 12 ? 0 : 2), [58, 64, 84], { seat: 1, far: 520 });
+      const l = at(i, -(HALF + WALL - 2)); box(l.x, l.y, l.yaw, 22, 10, 8, [40, 46, 62], { win: 1, far: 520, z0: 0 }); box(l.x, l.y, l.yaw, 23, 11, 1.4, [24, 28, 40], { z0: 8, far: 520 }); }
+    /* corner grandstands on the outside of the major bends */
+    for (let i = 0; i < N; i += 9) { const k = Math.abs(T.kap[i]); if (k > 0.004 && (i % 27 === 0)) { const side = T.kap[i] > 0 ? -1 : 1; const r = at(i, side * (HALF + WALL + 8)); box(r.x, r.y, r.yaw, 18, 10, 6.5, [52, 58, 80], { seat: side, far: 380 }); } }
+    /* flood-light towers */
+    for (let i = 8; i < N; i += 55) { const side = (i / 55 | 0) % 2 ? 1 : -1, r = at(i, side * (HALF + WALL + 5)); sc.push({ k: 3, x: r.x, y: r.y, yaw: r.yaw, far: 760 }); }
+    /* trees */
+    let tries = 0; while (sc.filter(o => o.k === 2).length < 260 && tries++ < 1200) {
+      const i = (R() * N) | 0, side = R() < .5 ? -1 : 1, off = side * (HALF + WALL + 16 + R() * 90), p = at(i, off);
+      let ok = true; for (let j = 0; j < N; j += 3) { if (Math.hypot(T.x[j] - p.x, T.y[j] - p.y) < HALF + WALL + 12) { ok = false; break; } } if (!ok) continue;
+      sc.push({ k: 2, x: p.x, y: p.y, h: 5 + R() * 6, g: 0.7 + R() * 0.5, far: 330 }); }
+    /* banners on the wall, corner boards, start gantry */
+    this.tex = {}; const mk = (key, w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); this.tex[key] = c; };
+    const ads = [['SHANGHAI', '#e10600'], ['中国大奖赛', '#0a5bd8'], ['F1 · CHINA', '#111'], ['上海', '#c8102e'], ['PIRELLI-X', '#f5b700'], ['FORMULA GP', '#1a1a2e']];
+    ads.forEach(([txt, bg], n) => mk('ad' + n, 320, 64, (g, w, h) => { g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = n === 4 ? '#000' : '#fff'; g.font = 'bold 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 2); }));
+    for (let i = 20, n = 0; i < N; i += 24, n++) { if (Math.abs(T.kap[i]) > 0.0025) continue; const side = n % 2 ? 1 : -1, off = side * (HALF + WALL + 0.15), a = at(i, off), b = at((i + 3) % N, off);
+      sc.push({ k: 4, x: a.x, y: a.y, tex: 'ad' + (n % ads.length), c: [[a.x, a.y, 1.3], [b.x, b.y, 1.3], [b.x, b.y, 2.9], [a.x, a.y, 2.9]], far: 380 }); }
+    CTRL.filter(p => p.t).forEach(p => {
+      const q = { x: 0, y: 0, i: 0, s: 0, d: 0 }; T.locate(p.x * T.scale, p.y * T.scale, -1, q); const i = q.i, side = T.kap[i] > 0 ? -1 : 1, off = side * (HALF + WALL - 2.5);
+      const a = at((i - 1 + N) % N, off), b = at((i + 1) % N, off); mk('t' + p.t, 128, 96, (g, w, h) => { g.fillStyle = '#0c1020'; g.fillRect(0, 0, w, h); g.strokeStyle = '#e10600'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+        g.fillStyle = '#fff'; g.font = 'bold 60px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('T' + p.t, w / 2, h / 2 + 3); });
+      sc.push({ k: 4, x: a.x, y: a.y, tex: 't' + p.t, c: [[a.x, a.y, 0.6], [b.x, b.y, 0.6], [b.x, b.y, 3.4], [a.x, a.y, 3.4]], far: 300 }); });
+    /* start gantry */
+    const s0 = at(0, 0), hw = HALF + 2.6;
+    mk('gantry', 512, 64, (g, w, h) => { g.fillStyle = '#0d1120'; g.fillRect(0, 0, w, h); g.fillStyle = '#e10600'; g.fillRect(0, 0, w, 5); g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SHANGHAI INTERNATIONAL CIRCUIT  ·  上海国际赛车场', w / 2, h / 2 + 3); });
+    box(s0.x + T.nx[0] * hw, s0.y + T.ny[0] * hw, s0.yaw, 2, 2, 11, [40, 44, 60], { far: 500 }); box(s0.x - T.nx[0] * hw, s0.y - T.ny[0] * hw, s0.yaw, 2, 2, 11, [40, 44, 60], { far: 500 });
+    box(s0.x, s0.y, s0.yaw, 2, hw * 2, 2.2, [30, 34, 50], { z0: 9.4, far: 500 });
+    const a = at(0, -hw), b = at(0, hw), tf = -1.05; sc.push({ k: 4, x: s0.x, y: s0.y, tex: 'gantry', c: [[a.x + T.tx[0] * tf, a.y + T.ty[0] * tf, 9.4], [b.x + T.tx[0] * tf, b.y + T.ty[0] * tf, 9.4], [b.x + T.tx[0] * tf, b.y + T.ty[0] * tf, 11.6], [a.x + T.tx[0] * tf, a.y + T.ty[0] * tf, 11.6]], far: 500 });
+    sc.push({ k: 5, x: s0.x, y: s0.y, far: 400 });
+    /* DRS boards (detection + zone start), sector boundary strips and boards — all from the shared Track metadata */
+    const idxOf = ss => Math.round(((ss % T.L) + T.L) % T.L / T.ds) % N;
+    mk('drsA', 320, 64, (g, w, h) => { g.fillStyle = '#0d1a10'; g.fillRect(0, 0, w, h); g.strokeStyle = '#22c55e'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6); g.fillStyle = '#22c55e'; g.font = 'bold 40px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('DRS ZONE ▶', w / 2, h / 2 + 2); });
+    mk('drsD', 320, 64, (g, w, h) => { g.fillStyle = '#1c1606'; g.fillRect(0, 0, w, h); g.strokeStyle = '#ffd60a'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6); g.fillStyle = '#ffd60a'; g.font = 'bold 34px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('DRS DETECTION', w / 2, h / 2 + 2); });
+    for (const z of T.drs) for (const [ss, key] of [[z.det, 'drsD'], [z.start, 'drsA']]) for (const side of [-1, 1]) { const i = idxOf(ss), off = side * (HALF + WALL + 0.15), a = at(i, off), b = at((i + 3) % N, off);
+      sc.push({ k: 4, x: a.x, y: a.y, tex: key, c: [[a.x, a.y, 1.4], [b.x, b.y, 1.4], [b.x, b.y, 3.6], [a.x, a.y, 3.6]], far: 420 }); }
+    [1, 2].forEach(k => { const ss = k * T.L / 3, i = idxOf(ss), col = k === 1 ? '#2f7cf6' : '#ffd60a'; const p0 = T.posAt(ss, 0);
+      sc.push({ k: 6, x: p0.x, y: p0.y, s: ss, ly: k === 1 ? LY.SEC_B : LY.SEC_Y, far: 380 });
+      mk('sec' + k, 256, 64, (g, w, h) => { g.fillStyle = '#0c1020'; g.fillRect(0, 0, w, h); g.fillStyle = col; g.fillRect(0, 0, 14, h); g.fillStyle = '#fff'; g.font = 'bold 34px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SECTOR ' + (k + 1), w / 2 + 6, h / 2 + 2); });
+      const off = -(HALF + WALL + 0.15), a = at(i, off), b = at((i + 3) % N, off); sc.push({ k: 4, x: a.x, y: a.y, tex: 'sec' + k, c: [[a.x, a.y, 1.4], [b.x, b.y, 1.4], [b.x, b.y, 3.2], [a.x, a.y, 3.2]], far: 380 }); });
+    /* sky assets */
+    this.sky = { stars: Array.from({ length: 140 }, () => [R() * TAU - Math.PI, 0.04 + R() * 0.7, R() < .15 ? 2 : 1]), bld: [] };
+    for (let a = -Math.PI; a < Math.PI; a += 0.012 + R() * 0.02) this.sky.bld.push({ a, w: 0.008 + R() * 0.02, h: 0.01 + R() * R() * 0.09, lit: Array.from({ length: 5 }, () => [R(), R()]) });
+    this.pearl = 2.35;
+    this.glow = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, 'rgba(255,248,220,1)'); gr.addColorStop(.25, 'rgba(255,240,200,.55)'); gr.addColorStop(1, 'rgba(255,240,200,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return c; })();
+  }
+
+  /* ---- camera & projection ---- */
+  setCamera(c) { const cam = this.cam; Object.assign(cam, c); cam.fx = Math.cos(cam.yaw); cam.fy = Math.sin(cam.yaw); cam.rx = -cam.fy; cam.ry = cam.fx; cam.cp = Math.cos(cam.pitch); cam.sp = Math.sin(cam.pitch);
+    cam.cx = this.W / 2; cam.cy = this.H * 0.5; cam.f = (this.W / 2) / Math.tan(cam.fov / 2); }
+  xf(x, y, z, o) {          // world -> camera space (depth, right, up) with pitch applied
+    const cam = this.cam, rx = x - cam.x, ry = y - cam.y, d0 = rx * cam.fx + ry * cam.fy, xc = rx * cam.rx + ry * cam.ry, u0 = z - cam.z;
+    this.CV[o] = d0 * cam.cp - u0 * cam.sp; this.CV[o + 1] = xc; this.CV[o + 2] = u0 * cam.cp + d0 * cam.sp; }
+  /* clip the n camera-space vertices in CV against the near plane, project, cull, fill */
+  fill(n, style) {
+    const CV = this.CV, CO = this.CO, cam = this.cam; let m = 0;
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n, di = CV[i * 3], dj = CV[j * 3], ini = di >= NEAR, inj = dj >= NEAR;
+      if (ini) { CO[m * 3] = di; CO[m * 3 + 1] = CV[i * 3 + 1]; CO[m * 3 + 2] = CV[i * 3 + 2]; m++; }
+      if (ini !== inj) { const t = (NEAR - di) / (dj - di); CO[m * 3] = NEAR; CO[m * 3 + 1] = lerp(CV[i * 3 + 1], CV[j * 3 + 1], t); CO[m * 3 + 2] = lerp(CV[i * 3 + 2], CV[j * 3 + 2], t); m++; } }
+    if (m < 3) return false;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; const SX = this.SX, SY = this.SY;
+    for (let k = 0; k < m; k++) { const d = CO[k * 3], sx = cam.cx + cam.f * CO[k * 3 + 1] / d, sy = cam.cy - cam.f * CO[k * 3 + 2] / d; SX[k] = sx; SY[k] = sy; if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy; }
+    if (x1 < 0 || x0 > this.W || y1 < 0 || y0 > this.H || (x1 - x0 < 0.4 && y1 - y0 < 0.4)) return false;
+    const ctx = this.ctx; ctx.beginPath(); ctx.moveTo(SX[0], SY[0]); for (let k = 1; k < m; k++) ctx.lineTo(SX[k], SY[k]); ctx.closePath(); ctx.fillStyle = style; ctx.fill(); return true;
+  }
+  proj(x, y, z, out) { this.xf(x, y, z, 0); const d = this.CV[0]; if (d < NEAR) return false; out.x = this.cam.cx + this.cam.f * this.CV[1] / d; out.y = this.cam.cy - this.cam.f * this.CV[2] / d; out.d = d; return true; }
+
+  /* ---- sky ---- */
+  drawSky() {
+    const ctx = this.ctx, cam = this.cam, W = this.W, H = this.H, hy = cam.cy - cam.f * Math.tan(cam.pitch);
+    const sky = ctx.createLinearGradient(0, Math.min(0, hy - H), 0, Math.max(hy, 1)); sky.addColorStop(0, '#03050c'); sky.addColorStop(.6, '#0a1226'); sky.addColorStop(1, '#1c2646');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, Math.max(hy, 0) + 1); this.hy = hy;
+    ctx.fillStyle = '#fff'; for (const s of this.sky.stars) { const da = wrap(s[0] - cam.yaw); if (Math.abs(da) > 1.3) continue; const sx = cam.cx + cam.f * Math.tan(da), sy = hy - cam.f * s[1] * 0.9;
+      if (sy > 0 && sy < hy) { ctx.globalAlpha = 0.35 + 0.4 * s[2] / 2; ctx.fillRect(sx, sy, s[2] * this.dpr, s[2] * this.dpr); } } ctx.globalAlpha = 1;
+    /* Shanghai skyline silhouette (parallax = pure yaw) */
+    for (const b of this.sky.bld) { const da = wrap(b.a - cam.yaw); if (Math.abs(da) > 1.25) continue; const sx = cam.cx + cam.f * Math.tan(da), bw = Math.max(2, cam.f * b.w), bh = cam.f * b.h;
+      ctx.fillStyle = '#0b1226'; ctx.fillRect(sx - bw / 2, hy - bh, bw, bh + 2); ctx.fillStyle = 'rgba(255,220,140,.55)'; for (const l of b.lit) ctx.fillRect(sx - bw / 2 + l[0] * (bw - 2), hy - bh + 3 + l[1] * (bh - 6), 1.5 * this.dpr, 1.5 * this.dpr); }
+    const dp = wrap(this.pearl - cam.yaw); if (Math.abs(dp) < 1.25) { const sx = cam.cx + cam.f * Math.tan(dp), r1 = cam.f * 0.03, r2 = cam.f * 0.018, hgt = cam.f * 0.16;   // Oriental Pearl-style tower
+      ctx.fillStyle = '#0b1226'; ctx.fillRect(sx - 2, hy - hgt, 4, hgt); for (const [dy, r] of [[hgt * 0.42, r1], [hgt * 0.8, r2]]) { const g = ctx.createRadialGradient(sx, hy - dy, 0, sx, hy - dy, r); g.addColorStop(0, '#ff9ad5'); g.addColorStop(1, '#7a2b6b'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, hy - dy, r, 0, TAU); ctx.fill(); }
+      ctx.fillStyle = '#e8b6ff'; ctx.fillRect(sx - 1, hy - hgt - cam.f * 0.03, 2, cam.f * 0.03); }
+    /* ground base (also the far fog band) */
+    const gr = ctx.createLinearGradient(0, hy, 0, H); gr.addColorStop(0, `rgb(${FOG})`); gr.addColorStop(.25, '#0d2418'); gr.addColorStop(1, '#122c1c'); ctx.fillStyle = gr; ctx.fillRect(0, Math.max(hy, 0), W, H - Math.max(hy, 0));
+  }
+
+  /* ---- track segment i (a 4 m slice): grass, gravel, apron/kerb, asphalt, rubber, lines, barriers ---- */
+  quad(i, o0, o1, z, style, ext) {
+    const T = this.T, j = (i + 1) % T.N, xf = this.xf.bind(this);
+    xf(T.x[i] + T.nx[i] * o0, T.y[i] + T.ny[i] * o0, z, 0); xf(T.x[i] + T.nx[i] * o1, T.y[i] + T.ny[i] * o1, z, 3);
+    xf(T.x[j] + T.nx[j] * o1 + T.tx[j] * ext, T.y[j] + T.ny[j] * o1 + T.ty[j] * ext, z, 6); xf(T.x[j] + T.nx[j] * o0 + T.tx[j] * ext, T.y[j] + T.ny[j] * o0 + T.ty[j] * ext, z, 9);
+    this.fill(4, style);
+  }
+  seg(i, d, p) {
+    const T = this.T, N = T.N, ext = 0.7, HW = HALF, ap = HALF + SHOULDER, wl = HALF + WALL, near = d < 300;
+    const ga = ((i >> 3) & 1) ? LY.GA : LY.GB;
+    for (const sd of [-1, 1]) {
+      this.quad(i, sd * ap, sd * wl, 0, LS(ga, d), ext);
+      if (T.gravel[i] === sd) this.quad(i, sd * ap, sd * (ap + 8), 0.01, LS(LY.GRAVEL, d), ext);
+      this.quad(i, sd * HW, sd * ap, 0.012, LS(T.kerb[i] ? (((i >> 1) & 1) ? LY.KR : LY.KW) : LY.SHOULDER, d), ext);
+    }
+    this.quad(i, -HW, HW, 0.02, LS(((i >> 4) & 1) ? LY.AA : LY.AB, d), ext);
+    if (near) {
+      const ro = T.ro[i]; this.quad(i, ro - 1.3, ro + 1.3, 0.025, LS(LY.RUBBER, d), ext);
+      this.quad(i, -HW + 0.1, -HW + 0.45, 0.03, LS(LY.LINE, d), ext); this.quad(i, HW - 0.45, HW - 0.1, 0.03, LS(LY.LINE, d), ext);
+      if (T.drsFlag[i]) { this.quad(i, -HW + 0.55, -HW + 1.25, 0.032, LS(LY.DRS, d), ext); this.quad(i, HW - 1.25, HW - 0.55, 0.032, LS(LY.DRS, d), ext); }   // DRS zone edge stripes
+    }
+    /* driving-line assist: green = accelerate, yellow = lift, red = brake (compares planned speed with current speed) */
+    if (this.assist && p) { const ah = (i - p.hint + N) % N; if (ah < 70) { const r = T.vp[i] / Math.max(p.speedAbs, 8), col = r > 1.02 ? '52,211,90' : r > 0.86 ? '255,214,10' : '255,60,50'; this.quad(i, T.ro[i] - 0.55, T.ro[i] + 0.55, 0.05, `rgba(${col},${(0.85 - ah / 100).toFixed(2)})`, ext); } }
+    /* barriers: inner face of both walls, alternating panels; red/white tech-pro on the outside of corners */
+    const j = (i + 1) % N;
+    for (const sd of [-1, 1]) {
+      const off = sd * wl, corner = T.kerb[i] && T.gravel[i] === sd, ly = corner ? (((i >> 1) & 1) ? LY.WR : LY.WB) : (((i >> 2) & 1) ? LY.WA : LY.WB);
+      this.xf(T.x[i] + T.nx[i] * off, T.y[i] + T.ny[i] * off, 0, 0); this.xf(T.x[j] + T.nx[j] * off + T.tx[j] * ext, T.y[j] + T.ny[j] * off + T.ty[j] * ext, 0, 3);
+      this.xf(T.x[j] + T.nx[j] * off + T.tx[j] * ext, T.y[j] + T.ny[j] * off + T.ty[j] * ext, 1.2, 6); this.xf(T.x[i] + T.nx[i] * off, T.y[i] + T.ny[i] * off, 1.2, 9); this.fill(4, LS(ly, d));
+    }
+  }
+
+  /* ---- generic oriented box (used for scenery and the F1 car). Only camera-facing faces are emitted. ---- */
+  boxFaces(out, cx, cy, yaw, x0, x1, y0, y1, z0, z1, col, em, tag) {
+    const c = Math.cos(yaw), s = Math.sin(yaw), cam = this.cam;
+    const W = (lx, ly) => [cx + c * lx - s * ly, cy + s * lx + c * ly];
+    const p = [W(x0, y0), W(x1, y0), W(x1, y1), W(x0, y1)];   // ground-plane corners in order: back-left, front-left, front-right, back-right
+    const sides = [[0, 1, 0, -1], [1, 2, 1, 0], [2, 3, 0, 1], [3, 0, -1, 0]];   // edge a->b and local outward normal
+    for (let k = 0; k < 4; k++) { const [a, b, nx, ny] = sides[k], wx = nx * c - ny * s, wy = nx * s + ny * c, mx = (p[a][0] + p[b][0]) / 2, my = (p[a][1] + p[b][1]) / 2;
+      if ((cam.x - mx) * wx + (cam.y - my) * wy <= 0) continue;
+      const lit = em ? 1.3 : clamp(0.55 + 0.45 * (wx * -0.35 + wy * -0.5) + 0.12, 0.35, 1.05);
+      out.push({ v: [p[a][0], p[a][1], z0, p[b][0], p[b][1], z0, p[b][0], p[b][1], z1, p[a][0], p[a][1], z1], d: (mx - cam.x) * cam.fx + (my - cam.y) * cam.fy, col, sh: lit, side: k, tag }); }
+    if (cam.z > z1) { const mx = (p[0][0] + p[2][0]) / 2, my = (p[0][1] + p[2][1]) / 2;
+      out.push({ v: [p[0][0], p[0][1], z1, p[1][0], p[1][1], z1, p[2][0], p[2][1], z1, p[3][0], p[3][1], z1], d: (mx - cam.x) * cam.fx + (my - cam.y) * cam.fy - 0.001, col, sh: em ? 1.3 : 1.1, side: 4, tag }); }
+  }
+  drawFaces(faces, alpha, dOverride) {
+    faces.sort((a, b) => b.d - a.d); const ctx = this.ctx; if (alpha != null) ctx.globalAlpha = alpha;
+    for (const f of faces) { for (let k = 0; k < 4; k++) this.xf(f.v[k * 3], f.v[k * 3 + 1], f.v[k * 3 + 2], k * 3); this.fill(4, mixRGB(f.col, dOverride != null ? dOverride : f.d, f.sh)); }
+    ctx.globalAlpha = 1;
+  }
+
+  drawObj(o, d, faces) {
+    const ctx = this.ctx, T = this.T;
+    if (o.k === 1) {
+      const hl = o.l / 2, hw = o.w / 2, n0 = faces.length; this.boxFaces(faces, o.x, o.y, o.yaw, -hl, hl, -hw, hw, o.z0, o.z0 + o.h, o.col, 0, o);
+      if (d < 260 && (o.seat || o.win)) {            // crowd rows / lit windows painted on the track-facing side
+        const sd = o.seat ? o.seat : 1, y = sd * -hw * 0.999, rows = o.win ? 2 : 6;
+        for (let r = 0; r < rows; r++) { const z = o.z0 + 1 + r * (o.h - 2) / rows, col = o.win ? [255, 226, 150] : [[190, 50, 50], [230, 230, 235], [70, 90, 170], [240, 190, 60]][(r + (o.x | 0)) & 3];
+          const c = Math.cos(o.yaw), s = Math.sin(o.yaw); const P = (lx, ly, z) => [o.x + c * lx - s * ly, o.y + s * lx + c * ly, z];
+          const a = P(-hl + 1, y, z), b = P(hl - 1, y, z), t = o.win ? 0.7 : (o.h - 2) / rows * 0.7, a2 = P(-hl + 1, y, z + t), b2 = P(hl - 1, y, z + t);
+          faces.push({ v: [...a, ...b, ...b2, ...a2], d: d - 2.5, col: col, sh: o.win ? 1.4 : 0.8, side: 9 }); } }
+    } else if (o.k === 2) {           // tree: two stacked triangles, screen-aligned
+      const p = {}; if (!this.proj(o.x, o.y, 0, p)) return; const h = o.h * this.cam.f / p.d, w = h * 0.32, sh = fogF(p.d); if (h < 2) return;
+      ctx.fillStyle = mixRGB([14, 40, 28], p.d, o.g); ctx.beginPath(); ctx.moveTo(p.x, p.y - h); ctx.lineTo(p.x + w, p.y - h * 0.3); ctx.lineTo(p.x - w, p.y - h * 0.3); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - h * 0.72); ctx.lineTo(p.x + w * 1.25, p.y - h * 0.08); ctx.lineTo(p.x - w * 1.25, p.y - h * 0.08); ctx.fill(); ctx.fillStyle = mixRGB([50, 34, 24], p.d, 1); ctx.fillRect(p.x - w * .1, p.y - h * .1, w * .2, h * .1);
+    } else if (o.k === 3) {           // flood-light tower: pole + emissive lamp bank + additive glow
+      const c = Math.cos(o.yaw), s = Math.sin(o.yaw); this.boxFaces(faces, o.x, o.y, o.yaw, -.35, .35, -.35, .35, 0, 24, [50, 54, 66], 0, o);
+      this.boxFaces(faces, o.x, o.y, o.yaw, -.5, .5, -2.4, 2.4, 24, 25.2, [255, 250, 225], 1, o);
+      const p = {}; if (this.proj(o.x, o.y, 24.6, p)) { const r = Math.min(this.cam.f * 22 / p.d, 420); this.glows.push([p.x, p.y, r, 1 - fogF(p.d) * 0.6]); }
+    } else if (o.k === 4) { this.drawBanner(o, d); }
+    else if (o.k === 6) {             // sector boundary: coloured strip across the road
+      const p0 = T.posAt(o.s, 0), c = Math.cos(p0.h), s = Math.sin(p0.h), P = (ln, ld) => [p0.x + c * ln - s * ld, p0.y + s * ln + c * ld], a = P(-.4, -HALF), b = P(-.4, HALF), e = P(.4, HALF), f = P(.4, -HALF);
+      this.xf(a[0], a[1], .045, 0); this.xf(b[0], b[1], .045, 3); this.xf(e[0], e[1], .045, 6); this.xf(f[0], f[1], .045, 9); this.fill(4, LS(o.ly, d));
+    }
+    else if (o.k === 5) {             // start/finish chequer
+      const p0 = T.posAt(0, 0), c = Math.cos(p0.h), s = Math.sin(p0.h);
+      for (let r = 0; r < 2; r++) for (let q = -7; q < 7; q++) { const col = (r + q) & 1 ? '#f4f4f6' : '#111';
+        const P = (ln, ld) => [p0.x + c * ln - s * ld, p0.y + s * ln + c * ld]; const a = P(r * .7 - .7, q), b = P(r * .7 - .7, q + 1), e = P(r * .7, q + 1), f = P(r * .7, q);
+        this.xf(a[0], a[1], .04, 0); this.xf(b[0], b[1], .04, 3); this.xf(e[0], e[1], .04, 6); this.xf(f[0], f[1], .04, 9); this.fill(4, col); }
+    }
+  }
+  drawBanner(o, d) {          // textured vertical quad drawn with an affine transform (good enough for near-frontal panels)
+    const ctx = this.ctx, q = [{}, {}, {}, {}]; for (let k = 0; k < 4; k++) if (!this.proj(o.c[k][0], o.c[k][1], o.c[k][2], q[k])) return;
+    /* corners are [bottom-a, bottom-b, top-b, top-a]; the board is seen from the track, so the top corner that is further left
+       on screen is the texture's top-left. This keeps text upright and un-mirrored whichever side of the track the board is on. */
+    const flip = q[3].x > q[2].x, tl = flip ? q[2] : q[3], tr = flip ? q[3] : q[2], bl = flip ? q[1] : q[0], tex = this.tex[o.tex];
+    if (Math.abs(tr.x - tl.x) < 2 && Math.abs(tr.y - tl.y) < 2) return;
+    const a = (tr.x - tl.x) / tex.width, b = (tr.y - tl.y) / tex.width, c = (bl.x - tl.x) / tex.height, dd = (bl.y - tl.y) / tex.height;
+    ctx.save(); ctx.globalAlpha = 1 - fogF(d) * 0.92; ctx.setTransform(a, b, c, dd, tl.x, tl.y); ctx.drawImage(tex, 0, 0); ctx.restore();
+  }
+
+  /* ---- F1 car built from boxes, drawn with depth-sorted faces ---- */
+  carFaces(car, ghost, faces, frontOnly) {
+    const cx = car.x, cy = car.y, yaw = car.h, col = ghost ? [110, 230, 255] : car.col, acc = ghost ? [200, 250, 255] : car.acc, dark = [26, 26, 32];
+    const d = (cx - this.cam.x) * this.cam.fx + (cy - this.cam.y) * this.cam.fy;
+    /* B(box, colour, emissive, front): `front` boxes are the ones still drawn from the cockpit camera (nose, wings, tub, front tyres) */
+    const B = (x0, x1, y0, y1, z0, z1, c, em, fr) => { if (frontOnly && !fr) return; this.boxFaces(faces, cx, cy, yaw, x0, x1, y0, y1, z0, z1, c, em, car); };
+    B(-1.6, 1.4, -.4, .4, .12, .5, col, 0, 1);                                                        // monocoque
+    B(1.4, 2.5, -.17, .17, .18, .42, col, 0, 1);                                                      // nose
+    B(2.3, 2.85, -1, 1, .08, .18, dark, 0, 1); B(2.3, 2.85, -1, -.9, .08, .3, acc, 0, 1); B(2.3, 2.85, .9, 1, .08, .3, acc, 0, 1);   // front wing + end plates
+    B(-1.0, .6, -.95, .95, .14, .6, col);                                                             // sidepods
+    B(-2.0, -.2, -.28, .28, .5, .95, col);                                                            // engine cover / airbox
+    B(.2, .55, -.3, .3, .62, .74, dark); B(.05, .4, -.14, .14, .5, .7, acc);                          // halo + driver helmet
+    B(-2.4, -1.95, -.55, .55, .55, 1.0, dark); B(-2.4, -1.95, -.62, -.52, .3, 1.08, col); B(-2.4, -1.95, .52, .62, .3, 1.08, col);   // rear wing
+    const braking = car.brk > 0.1 && car.speed > 1; B(-2.42, -2.38, -.16, .16, .45, .6, braking ? [255, 40, 30] : [90, 10, 10], braking ? 1 : 0);   // brake light
+    for (const [wx, wy, wl, wh, fr] of [[1.4, 1.05, .72, .72, 1], [1.4, -1.05, .72, .72, 1], [-1.65, 1.1, .8, .78, 0], [-1.65, -1.1, .8, .78, 0]]) B(wx - wl / 2, wx + wl / 2, wy - .21, wy + .21, 0, wh, [22, 22, 26], 0, fr);
+    return d;
+  }
+  drawCar(car, ghost, frontOnly) {
+    const ctx = this.ctx, c = Math.cos(car.h), s = Math.sin(car.h), faces = [];
+    if (!ghost) { for (const [k, pts] of [[0, [[2.4, -1.2], [2.4, 1.2], [-2.5, 1.2], [-2.5, -1.2]]]]) { pts.forEach((p, n) => this.xf(car.x + c * p[0] - s * p[1], car.y + s * p[0] + c * p[1], 0.03, n * 3)); this.fill(4, 'rgba(0,0,0,.38)'); } }
+    const d = this.carFaces(car, ghost, faces, frontOnly); this.drawFaces(faces, ghost ? 0.4 : null, d);
+  }
+
+  /* ---- particles (tyre smoke, dust, sparks) ---- */
+  spawn(race, dt) {
+    const P = this.parts;
+    for (const car of race.cars) {
+      const sp = car.speedAbs; if (sp < 6) continue; const c = Math.cos(car.h), s = Math.sin(car.h);
+      const lock = car.brk > 0.85 && sp > 30, drift = car.slip > 3.5, grass = car.off >= 3 && car.surf.mu < 0.7;
+      const dx = Math.hypot(car.x - this.cam.x, car.y - this.cam.y); if (dx > 200) continue;
+      if ((lock || drift || grass) && P.length < 320) for (const w of [[-1.65, 1.1], [-1.65, -1.1]]) if (Math.random() < dt * 40) {
+        const dust = grass; P.push({ x: car.x + c * w[0] - s * w[1], y: car.y + s * w[0] + c * w[1], z: .2, vx: car.vx * .3 + (Math.random() - .5) * 2, vy: car.vy * .3 + (Math.random() - .5) * 2, vz: 1 + Math.random(), life: 0, max: dust ? .9 : 1.3, r: dust ? 0.9 : 1.1, col: dust ? [110, 130, 80] : [210, 210, 220], g: 0 }); }
+      if (car.impact > 3 && car.sparkAt && P.length < 360) { for (let k = 0; k < 10; k++) P.push({ x: car.sparkAt[0], y: car.sparkAt[1], z: .5, vx: (Math.random() - .5) * 12, vy: (Math.random() - .5) * 12, vz: Math.random() * 6, life: 0, max: .5, r: .18, col: [255, 200, 80], g: 14, spark: 1 }); car.impact = 0; }
+    }
+  }
+  drawParts(dt) {
+    const ctx = this.ctx, P = this.parts, q = {}; ctx.save();
+    for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; p.life += dt; if (p.life > p.max) { P.splice(i, 1); continue; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= p.g * dt; if (p.z < 0) { p.z = 0; p.vz *= -.3; }
+      if (!this.proj(p.x, p.y, p.z, q) || q.d < 3) continue; const k = p.life / p.max, r = Math.min(Math.max(1, (p.r * (p.spark ? 1 : 1 + k * 1.6)) * this.cam.f / q.d), 22 * this.dpr);
+      ctx.globalAlpha = (1 - k) * (p.spark ? 1 : 0.28) * Math.min(1, (q.d - 3) / 8); ctx.fillStyle = `rgb(${p.col})`; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, TAU); ctx.fill(); }
+    ctx.restore();
+  }
+
+  /* ---- frame ---- */
+  frame(race, camState, dt) {
+    const ctx = this.ctx, T = this.T, cam = this.cam, W = this.W, H = this.H, player = race.player;
+    this.setCamera(camState); this.assist = camState.assist; this.glows = [];
+    this.drawSky();
+    const items = this.items; items.length = 0;
+    for (let i = 0; i < T.N; i++) { const dx = T.x[i] - cam.x, dy = T.y[i] - cam.y, d = dx * cam.fx + dy * cam.fy; if (d < -12 || d > VIEW) continue;
+      const xc = dx * cam.rx + dy * cam.ry; if (Math.abs(xc) > d * 2.3 + 42) continue; items.push({ t: 0, i, d }); }
+    for (const o of this.scene) { const dx = o.x - cam.x, dy = o.y - cam.y, d = dx * cam.fx + dy * cam.fy; if (d < -30 || d > o.far) continue; const xc = dx * cam.rx + dy * cam.ry; if (Math.abs(xc) > d * 2.4 + 60) continue; items.push({ t: 1, o, d }); }
+    for (const car of race.cars) { const d = (car.x - cam.x) * cam.fx + (car.y - cam.y) * cam.fy; if (d > -8 && d < 420) items.push({ t: 2, car, d: d - 5 }); }   /* bias: a car must draw after the ground slices under its 5 m body */
+    const gp = race.state !== 'countdown' && race.player.tm.lineT != null ? race.ghostAt(race.raceT - race.player.tm.lineT) : null;
+    if (gp) { const gc = { x: gp.x, y: gp.y, h: gp.h, col: [0, 0, 0], acc: [0, 0, 0], brk: 0, speed: 0 }; items.push({ t: 3, car: gc, d: (gp.x - cam.x) * cam.fx + (gp.y - cam.y) * cam.fy - 5 }); }
+    items.sort((a, b) => b.d - a.d);
+    const sceneFaces = [];
+    for (const it of items) {
+      if (it.t === 0) this.seg(it.i, it.d, player);
+      else if (it.t === 1) { sceneFaces.length = 0; this.drawObj(it.o, it.d, sceneFaces); if (sceneFaces.length) this.drawFaces(sceneFaces); }
+      else if (it.t === 2) { this.drawCar(it.car, false, it.car === player && camState.mode === 2); }   // onboard: only nose / wing / front tyres
+      else this.drawCar(it.car, true);
+    }
+    this.spawn(race, dt); this.drawParts(dt);
+    /* driver tags */
+    ctx.font = `700 ${Math.round(12 * this.dpr)}px system-ui,sans-serif`; ctx.textAlign = 'center'; const q = {};
+    for (const car of race.cars) { if (car === player) continue; if (!this.proj(car.x, car.y, 2.1, q) || q.d > 160) continue; const w = ctx.measureText(car.code).width + 12 * this.dpr, h = 16 * this.dpr;
+      ctx.globalAlpha = 1 - q.d / 200; ctx.fillStyle = 'rgba(8,12,22,.75)'; ctx.fillRect(q.x - w / 2, q.y - h, w, h); ctx.fillStyle = `rgb(${car.col})`; ctx.fillRect(q.x - w / 2, q.y - h, 3 * this.dpr, h); ctx.fillStyle = '#fff'; ctx.fillText(car.code, q.x + 1.5 * this.dpr, q.y - 4 * this.dpr); ctx.globalAlpha = 1; }
+    /* additive tower glows */
+    ctx.globalCompositeOperation = 'lighter'; for (const g of this.glows) { ctx.globalAlpha = g[3] * .8; ctx.drawImage(this.glow, g[0] - g[2] / 2, g[1] - g[2] / 2, g[2], g[2]); } ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    /* speed lines */
+    const v = player.speedAbs; if (v > 50 && camState.mode !== 1) { ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.lineWidth = this.dpr; const R = Math.min(W, H); const n = ((v - 50) / 40 * 18) | 0;
+      for (let k = 0; k < n; k++) { const a = Math.random() * TAU, r0 = R * (.45 + Math.random() * .15), r1 = r0 + R * (.12 + Math.random() * .25); ctx.beginPath(); ctx.moveTo(W / 2 + Math.cos(a) * r0 * 1.4, H / 2 + Math.sin(a) * r0); ctx.lineTo(W / 2 + Math.cos(a) * r1 * 1.4, H / 2 + Math.sin(a) * r1); ctx.stroke(); } }
+    if (player.hit > 0.9) { ctx.fillStyle = `rgba(255,255,255,${(player.hit - 0.9) * 1.4})`; ctx.fillRect(0, 0, W, H); }
+  }
+}
+
+/* ------------------------------------------------------ 8. UI / INPUT / MAIN */
+const $ = id => document.getElementById(id);
+const track = new Track(CTRL);
+const race = new Race(track, { laps: 3, tyre: 'M', diff: 'pro' });
+const scene = $('scene'), R = new Renderer(scene, track);
+const params = new URLSearchParams(location.search);
+const opt = { laps: 3, tyre: 'M', diff: 'pro' };
+let camMode = 0, assist = false, paused = false, muted = false, menuOpen = true, menuWas = '';
+const camS = { x: 0, y: 0, z: 3, yaw: 0, pitch: 0.1, fov: 1.4, mode: 0, assist: false, init: false };
+
+/* --- input: keyboard with smoothing handled in the physics (steer rate limiter); pedals are digital --- */
+const keys = new Set();
+const KEYMAP = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
+const touch = { up: 0, down: 0, left: 0, right: 0 };
+function readInput() {
+  const g = k => keys.has(k) || touch[k];
+  race.input.throttle = g('up') ? 1 : 0; race.input.brake = g('down') ? 1 : 0; race.input.steer = (g('right') ? 1 : 0) - (g('left') ? 1 : 0);
+}
+addEventListener('keydown', e => {
+  const m = KEYMAP[e.code]; if (m) { keys.add(m); e.preventDefault(); }
+  if (e.repeat) return;
+  if (e.code === 'Enter') { if (menuOpen) startRace(); else startRace(); e.preventDefault(); }
+  else if (e.code === 'KeyC') cycleCam(); else if (e.code === 'KeyR') toggleAssist(); else if (e.code === 'KeyM') toggleMute();
+  else if (e.code === 'KeyP') { paused = !paused; toast(paused ? 'PAUSED' : 'RESUMED'); }
+  else if (e.code === 'KeyX' && !menuOpen && race.state === 'racing') { race.player.respawn(track); toast('CAR RESET'); }
+  else if (e.code === 'Space') e.preventDefault();
+});
+addEventListener('keyup', e => { const m = KEYMAP[e.code]; if (m) keys.delete(m); });
+addEventListener('blur', () => keys.clear());
+[['tL', 'left'], ['tR', 'right'], ['tG', 'up'], ['tB', 'down']].forEach(([id, k]) => { const b = $(id); b.addEventListener('pointerdown', e => { touch[k] = 1; e.preventDefault(); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => touch[k] = 0)); });
+
+function seg(id, key, cb) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; [...$(id).children].forEach(x => x.classList.remove('on')); b.classList.add('on'); opt[key] = (key === 'laps') ? +b.dataset.v : b.dataset.v; if (cb) cb(); }); }
+seg('oLaps', 'laps'); seg('oTyre', 'tyre'); seg('oAI', 'diff');
+$('bStart').onclick = startRace; $('bAgain').onclick = startRace; $('bRestart').onclick = startRace; $('bMenu').onclick = () => { menuOpen = true; $('menu').style.display = 'flex'; };
+$('bCam').onclick = cycleCam; $('bLine').onclick = toggleAssist; $('bMute').onclick = toggleMute;
+function cycleCam() { camMode = (camMode + 1) % 3; camS.mode = camMode; toast(['CHASE CAM', 'HIGH CAM', 'ONBOARD'][camMode]); }
+function toggleAssist() { assist = !assist; camS.assist = assist; toast('RACING LINE ' + (assist ? 'ON' : 'OFF')); }
+function toggleMute() { muted = !muted; toast(muted ? 'SOUND OFF' : 'SOUND ON'); if (audio.g) audio.g.gain.value = muted ? 0 : 1; }
+let toastT = 0; function toast(t) { const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => e.style.opacity = 0, 1400); }
+function big(t, col) { const e = $('big'); e.textContent = t; e.style.color = col || '#fff'; e.classList.remove('show'); void e.offsetWidth; e.classList.add('show'); }
+
+function startRace() {
+  menuOpen = false; $('menu').style.display = 'none'; $('results').style.display = 'none';
+  race.laps = opt.laps; race.tyreC = opt.tyre; race.diff = opt.diff; race.startCountdown(); camS.init = false; $('lights').style.display = 'flex'; lastMsg = '';
+  $('lapT').textContent = opt.laps; audioStart(); ['s0', 's1', 's2'].forEach(i => $(i).className = 'sec');
+}
+
+/* --- audio: engine = two detuned saw oscillators through a low-pass, pitch follows RPM; tyre squeal = filtered noise --- */
+const audio = { ctx: null };
+function audioStart() {
+  if (audio.ctx) { audio.ctx.resume(); return; } const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  const c = audio.ctx = new AC(), g = audio.g = c.createGain(); g.gain.value = muted ? 0 : 1; g.connect(c.destination);
+  const lp = audio.lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; const eg = audio.eg = c.createGain(); eg.gain.value = 0; lp.connect(eg); eg.connect(g);
+  audio.o1 = c.createOscillator(); audio.o2 = c.createOscillator(); audio.o1.type = 'sawtooth'; audio.o2.type = 'square'; audio.o1.connect(lp); audio.o2.connect(lp); audio.o1.start(); audio.o2.start();
+  const buf = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const ns = c.createBufferSource(); ns.buffer = buf; ns.loop = true; const bp = audio.bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 2; audio.sg = c.createGain(); audio.sg.gain.value = 0; ns.connect(bp); bp.connect(audio.sg); audio.sg.connect(g); ns.start();
+}
+function audioUpdate(p) {
+  if (!audio.ctx) return; if (paused) { audio.eg.gain.setTargetAtTime(0, audio.ctx.currentTime, .03); audio.sg.gain.setTargetAtTime(0, audio.ctx.currentTime, .03); return; } const rpm = rpmOf(p.speedAbs).rpm, f = 55 + (rpm - 4000) / 8000 * 330, t = audio.ctx.currentTime;
+  audio.o1.frequency.setTargetAtTime(f, t, .05); audio.o2.frequency.setTargetAtTime(f * 1.005 * 0.5, t, .05); audio.lp.frequency.setTargetAtTime(500 + p.thr * 1400 + f * 2, t, .08);
+  audio.eg.gain.setTargetAtTime(race.state === 'grid' ? 0.03 : 0.11 + 0.1 * p.thr, t, .08); audio.sg.gain.setTargetAtTime(clamp((p.slip - 3) / 10, 0, 1) * 0.12 + (p.brk > .85 && p.speedAbs > 30 ? 0.05 : 0) + (p.hit > 1.1 ? .2 : 0) + (p.off >= 3 ? clamp(p.speedAbs / 90, 0, 1) * 0.06 : 0), t, .05);
+  audio.bp.frequency.setTargetAtTime(p.hit > 1.1 ? 260 : 1800, t, .02);   // wall hit = low thud, tyres = high squeal
+}
+function rpmOf(v) { const g = clamp(1 + Math.floor(v / 11), 1, 8), r = clamp((v - 11 * (g - 1)) / 11, 0, 1); return { g, rpm: 5000 + r * 7500 }; }
+
+/* --- camera: yaw trails the car's heading (slightly toward velocity so drifts show), FOV widens with speed --- */
+function updateCamera(dt) {
+  const p = race.player, v = p.speedAbs, vel = v > 3 ? Math.atan2(p.vy, p.vx) : p.h;
+  const target = p.h + 0.3 * wrap(vel - p.h) * (v > 3 ? 1 : 0);
+  if (!camS.init) { camS.yaw = p.h; camS.init = true; } camS.yaw += wrap(target - camS.yaw) * Math.min(1, dt * (camMode === 2 ? 16 : 5.5));
+  const M = [{ dist: 8.6, h: 3.1, look: 13, fov: 78 }, { dist: 15, h: 6.4, look: 15, fov: 68 }, { dist: -0.7, h: 0.98, look: 22, fov: 92 }][camMode];
+  const dist = M.dist + (camMode === 2 ? 0 : v * 0.02);
+  camS.x = p.x - Math.cos(camS.yaw) * dist; camS.y = p.y - Math.sin(camS.yaw) * dist;
+  const shake = (p.rough * 0.05 + (p.hit > 0.5 ? 0.12 : 0)) * (Math.random() - .5);
+  camS.z = M.h + shake + (camMode === 0 ? clamp(p.aLong, -20, 5) * -0.004 : 0);
+  camS.pitch = Math.atan2(M.h - 0.8, dist + M.look) * (camMode === 2 ? 0.25 : 1);
+  camS.fov = (M.fov + 20 * Math.min(1, v / 85)) * Math.PI / 180;
+}
+
+/* --- track map: ONE function draws the plan view from the shared Track data (sectors, DRS zones, corner numbers,
+       start line). It feeds both the in-race minimap (cached offscreen layer + live dots) and the menu preview. --- */
+function buildMapLayer(w, h, fs) {
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (let i = 0; i < track.N; i++) { x0 = Math.min(x0, track.x[i]); x1 = Math.max(x1, track.x[i]); y0 = Math.min(y0, track.y[i]); y1 = Math.max(y1, track.y[i]); }
+  const pad = 26, sc = Math.min((w - 2 * pad) / (x1 - x0), (h - 2 * pad) / (y1 - y0)), bb = { sc, ox: pad + ((w - 2 * pad) - (x1 - x0) * sc) / 2 - x0 * sc, oy: pad + ((h - 2 * pad) - (y1 - y0) * sc) / 2 - y0 * sc };
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'); g.lineJoin = 'round'; g.lineCap = 'butt';
+  const P = i => [track.x[i % track.N] * sc + bb.ox, track.y[i % track.N] * sc + bb.oy];
+  const stroke = (a, b, col, lw) => { g.beginPath(); for (let i = a; i <= b; i++) { const [X, Y] = P(i); i === a ? g.moveTo(X, Y) : g.lineTo(X, Y); } g.strokeStyle = col; g.lineWidth = lw; g.stroke(); };
+  stroke(0, track.N, '#000', fs * 0.9); stroke(0, track.N, '#39405a', fs * 0.62);
+  const cols = ['#e10600', '#2f7cf6', '#ffd60a'], sN = track.N / 3;
+  for (let k = 0; k < 3; k++) stroke(Math.floor(k * sN), Math.floor((k + 1) * sN), cols[k], fs * 0.2);
+  for (const z of track.drs) { const a = Math.floor(z.start / track.ds), b = a + Math.floor(z.len / track.ds); g.lineCap = 'butt'; stroke(a, b, '#22c55e', fs * 0.42); }
+  g.fillStyle = '#fff'; const [sx, sy] = P(0), a = track.posAt(0).h; g.save(); g.translate(sx, sy); g.rotate(a); g.fillRect(-fs * 0.12, -fs * 0.7, fs * 0.24, fs * 1.4); g.restore();
+  g.font = `700 ${Math.round(fs * 1.05)}px system-ui,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const c of track.corners) { const p = track.posAt(c.s, -c.side * (fs * 1.9) / sc), X = p.x * sc + bb.ox, Y = p.y * sc + bb.oy;
+    g.fillStyle = 'rgba(8,12,22,.85)'; g.beginPath(); g.arc(X, Y, fs * 0.85, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.fillText(c.n, X, Y + 0.5); }
+  return { cv, bb };
+}
+const mini = $('mini'), mctx = mini.getContext('2d'), mapL = buildMapLayer(mini.width, mini.height, 10), mbb = mapL.bb, mcache = mapL.cv;
+(function () {   // menu: facts + large preview drawn from the same data
+  const mm = $('menuMap'), L = buildMapLayer(mm.width, mm.height, 13); mm.getContext('2d').drawImage(L.cv, 0, 0);
+  const longest = Math.max(...track.straights.map(z => z.len)), hp = track.corners.filter(c => 1 / Math.abs(track.kap[c.i]) < 60).length;
+  $('facts').innerHTML = `<span><b>${(track.L / 1000).toFixed(3)} km</b> lap</span><span><b>${track.corners.length}</b> corners · 弯道</span><span><b>Clockwise</b> · 顺时针</span><span><b>${Math.round(longest)} m</b> longest straight</span><span><b>${track.drs.length}</b> DRS zones</span>`;
+})();
+function drawMini() {
+  mctx.clearRect(0, 0, mini.width, mini.height); mctx.drawImage(mcache, 0, 0); const P = (x, y) => [x * mbb.sc + mbb.ox, y * mbb.sc + mbb.oy];
+  const gp = race.state === 'racing' && race.player.tm.lineT != null ? race.ghostAt(race.raceT - race.player.tm.lineT) : null; if (gp) { const [a, b] = P(gp.x, gp.y); mctx.fillStyle = 'rgba(110,230,255,.75)'; mctx.beginPath(); mctx.arc(a, b, 6, 0, TAU); mctx.fill(); }
+  for (const c of race.cars) { const [a, b] = P(c.x, c.y); mctx.fillStyle = `rgb(${c.col})`; mctx.beginPath(); mctx.arc(a, b, c.isPlayer ? 9 : 6, 0, TAU); mctx.fill(); if (c.isPlayer) { mctx.strokeStyle = '#fff'; mctx.lineWidth = 3; mctx.stroke(); } }
+}
+
+/* --- HUD --- */
+const rpmEl = $('rpm'); for (let i = 0; i < 16; i++) rpmEl.appendChild(document.createElement('i')); const rpmBars = [...rpmEl.children];
+const setT = (id, v) => { const e = $(id); if (e.textContent !== v) e.textContent = v; };
+let lastMsg = '', hudT = 0, towerT = 0;
+function handleEvents() {
+  for (const e of race.events.splice(0)) {
+    if (e.type === 'go') { $('lights').style.display = 'none'; big('GO!', '#22c55e'); }
+    else if (e.type === 'sector') { const el = $('s' + e.i); el.className = 'sec ' + (e.purple ? 'p' : e.green ? 'g' : 'y'); el.textContent = 'S' + (e.i + 1) + ' ' + e.t.toFixed(2); toast(`SECTOR ${e.i + 1}  ${fmt(e.t)}${e.purple ? '  ·  FASTEST' : ''}`); }
+    else if (e.type === 'lap') { ['s0', 's1', 's2'].forEach((i, k) => { $(i).textContent = 'S' + (k + 1); $(i).className = 'sec'; }); big(e.lap < race.laps ? 'LAP ' + e.lap + '  ' + fmt(e.t) : '', '#fff'); if (e.best) toast('NEW BEST LAP ' + fmt(e.t)); try { localStorage.setItem('shgp-best', Math.min(+localStorage.getItem('shgp-best') || 1e9, e.t)); } catch (x) {} }
+    else if (e.type === 'finish') { big('CHEQUERED FLAG', '#fff'); setTimeout(showResults, 3200); }
+  }
+}
+function showResults() {
+  if (race.state !== 'finished') return; race.rank(); const p = race.player;
+  $('resTitle').textContent = p.pos === 1 ? 'Victory! 🏆' : 'P' + p.pos + ' — chequered flag'; $('resSub').textContent = `${race.laps} laps · best lap ${fmt(p.tm.best)}`;
+  $('resTable').innerHTML = '<tr><th>POS</th><th>DRIVER</th><th>BEST LAP</th><th>TIME</th></tr>' + race.order.map((c, i) => `<tr class="${c.isPlayer ? 'me' : ''}"><td>${i + 1}</td><td>${c.name}</td><td class="mono">${fmt(c.tm.best)}</td><td class="mono">${c.finished ? fmt(c.finishT) : (Math.max(1, Math.ceil((race.laps * track.L - c.dist) / track.L)) + ' lap(s) to go')}</td></tr>`).join('');
+  $('results').style.display = 'flex';
+}
+function updateHUD(now) {
+  const p = race.player, tm = p.tm; handleEvents();
+  const lightsEl = $('lights'); [...lightsEl.children].forEach((e, i) => e.classList.toggle('on', i < race.lit));
+  const kmh = Math.round(p.speedAbs * 3.6), r = rpmOf(p.speedAbs); setT('spd', String(kmh)); setT('gear', p.speedAbs < 0.5 ? 'N' : p.speed < -0.5 ? 'R' : String(r.g));
+  const rp = Math.round((r.rpm - 4000) / 8500 * 16); rpmBars.forEach((b, i) => { b.className = i < rp ? 'on ' + (i > 12 ? 'h' : i > 9 ? 'm' : '') : ''; });
+  $('thr').style.width = p.thr * 100 + '%'; $('brk').style.width = p.brk * 100 + '%';
+  if (now - hudT < 66) return; hudT = now;
+  const inRace = race.state === 'racing' || race.state === 'finished', lap = inRace ? Math.min(race.laps, Math.max(1, Math.floor(p.dist / track.L) + 1)) : 0;
+  setT('lapN', String(lap)); $('pos').innerHTML = 'P' + p.pos + '<small>/' + race.cars.length + '</small>';
+  setT('tCur', fmt(inRace ? race.raceT - tm.lapStart : 0)); setT('tBest', fmt(tm.best)); setT('tLast', fmt(tm.last));
+  const dl = race.delta(), de = $('tDelta'); if (dl == null) { de.textContent = ''; setT('dLbl', ''); } else { de.textContent = fmtD(dl); de.style.color = dl <= 0 ? '#22c55e' : '#ff5a4f'; setT('dLbl', '· Δ ghost'); }
+  const ds = race.drsState(p), de2 = $('drs'); const dtxt = ds === 'open' ? 'DRS OPEN' : ds === 'ready' ? 'DRS READY' : 'DRS'; if (de2.textContent !== dtxt) de2.textContent = dtxt; de2.className = 'mono ' + (ds === 'off' ? '' : ds);
+  const cur = inRace ? Math.min(2, Math.max(0, Math.floor((p.dist % track.L) / (track.L / 3)))) : -1; ['s0', 's1', 's2'].forEach((id, i) => { const e = $(id), done = /\b[gpy]\b/.test(e.className); e.classList.toggle('cur', i === cur && !done); });
+  const st = $('statusBox'); const txt = race.status; if (st.textContent !== txt) st.textContent = txt; st.className = 'panel ' + (race.state === 'racing' ? (race.statusLvl || '') : '');   // colour by severity
+  const ty = p.tyre; $('tBadge').style.borderColor = ty.comp.col; setT('tBadge', ty.comp.name[0]); setT('tName', ty.comp.name); setT('gripTxt', Math.round(ty.grip() * 100 / ty.comp.grip) + '%');
+  const wb = $('wearBar'); wb.style.width = ty.wear * 100 + '%'; wb.style.background = ty.wear > .6 ? '#ff5a4f' : ty.wear > .35 ? '#ffd60a' : '#22c55e';
+  const tb = $('tempBar'); tb.style.width = clamp((ty.temp - 30) / 120, 0, 1) * 100 + '%'; tb.style.background = Math.abs(ty.temp - 95) < 22 ? '#22c55e' : ty.temp < 95 ? '#38bdf8' : '#ff5a4f'; setT('tempTxt', Math.round(ty.temp) + '°C');
+  if (now - towerT > 250) { towerT = now; const o = race.order, lead = o[0]; $('tower').innerHTML = o.map((c, i) => `<div class="${c.isPlayer ? 'me' : ''}"><span class="p mono">${i + 1}</span><i style="background:rgb(${c.col})"></i><span class="c">${c.code}</span><span class="g mono">${i === 0 ? (c.finished ? 'FIN' : 'LEADER') : c.finished ? 'FIN' : '+' + Math.max(0, (lead.dist - c.dist) / Math.max(40, lead.speedAbs)).toFixed(1)}</span></div>`).join(''); }
+}
+
+/* --- main loop: fixed 120 Hz physics with an accumulator, render every animation frame --- */
+let last = performance.now(), acc = 0;
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (!paused) { acc += dt; let n = 0; readInput(); while (acc >= 1 / 120 && n++ < 24) { race.tick(1 / 120); acc -= 1 / 120; } if (n >= 24) acc = 0; }
+  updateCamera(dt); R.frame(race, camS, paused ? 0 : dt); drawMini(); updateHUD(now); audioUpdate(race.player);
+  requestAnimationFrame(loop);
+}
+addEventListener('resize', () => R.resize());
+new ResizeObserver(() => R.resize()).observe(scene);
+/* ------------------------------------------------------------- 9. SELF-TEST (`?selftest`)
+   Every check reads real simulation / DOM / canvas state. It runs on private Race instances so the live game is untouched,
+   except the keyboard test which goes through the real event listeners. Results are shown on screen and in <pre id="selftest">. */
+function runSelfTest() {
+  const out = []; const T = (name, fn) => { let ok = false, msg = '', skip = false; try { const r = fn(); ok = r === true || (r && r.ok === true); skip = !!(r && r.skip); msg = (r && r.msg) || ''; } catch (e) { msg = 'exception: ' + e.message; } out.push({ name, ok: ok && !skip, skip, msg }); };
+  const press = (code, dn) => dispatchEvent(new KeyboardEvent(dn ? 'keydown' : 'keyup', { code, bubbles: true, cancelable: true }));
+  const hold = (c, thr = 1) => ({ throttle: thr, brake: 0, steer: clamp(-0.02 * c.loc.d - 1.2 * wrap(c.h - track.posAt(c.loc.s).h), -1, 1) });   // keeps a car on a straight
+  const mkSim = (o = {}) => { const r = new Race(track, { laps: 1, ...o }); r.newRace({ laps: o.laps || 1 }); r.state = 'racing'; return r; };
+  const place = (car, s, off, speed) => { const q = track.posAt(s, off); car.reset(q.x, q.y, q.h); car.vx = Math.cos(q.h) * (speed || 0); car.vy = Math.sin(q.h) * (speed || 0); track.locate(car.x, car.y, -1, car.loc); car.hint = car.loc.i; car.prevS = car.loc.s; };
+  const run = (car, sec, inp) => { for (let i = 0; i < sec * 120; i++) car.step(1 / 120, track, inp); };
+  const ids = ['scene', 'mini', 'menu', 'results', 'pos', 'lapN', 'lapT', 'tCur', 'tBest', 'tLast', 'tDelta', 'dLbl', 's0', 's1', 's2', 'tower', 'statusBox', 'spd', 'gear', 'rpm', 'drs', 'thr', 'brk', 'wearBar', 'tempBar', 'tempTxt', 'gripTxt', 'tBadge', 'tName', 'lights', 'big', 'toast', 'bStart', 'bAgain', 'bRestart', 'bMenu', 'bCam', 'bLine', 'bMute', 'oLaps', 'oTyre', 'oAI', 'menuMap', 'facts', 'resTable', 'resTitle', 'resSub', 'tL', 'tR', 'tG', 'tB'];
+
+  T('1 page init: every DOM id used by the script exists', () => { const miss = ids.filter(i => !document.getElementById(i)); return { ok: miss.length === 0, msg: miss.join(',') }; });
+  T('2 track: length, closed loop, 16 corners, DRS zones', () => { const N = track.N, g = Math.hypot(track.x[0] - track.x[N - 1], track.y[0] - track.y[N - 1]);
+    return { ok: Math.abs(track.L - 5451) < 1 && N > 1000 && Math.abs(g - track.ds) < 0.5 && track.corners.length === 16 && track.drs.length >= 2, msg: `N=${N} L=${track.L.toFixed(0)} gap=${g.toFixed(2)} corners=${track.corners.length} drs=${track.drs.length}` }; });
+  T('3 track: sections never closer than two run-offs (no wall overlap)', () => { let m = 1e9; for (let i = 0; i < track.N; i += 3) for (let j = i + 1; j < track.N; j += 3) { const da = Math.min(j - i, track.N - (j - i)) * track.ds; if (da < 200) continue; m = Math.min(m, Math.hypot(track.x[i] - track.x[j], track.y[i] - track.y[j])); }
+    return { ok: m > 2 * (HALF + WALL) + 10, msg: 'min separation ' + m.toFixed(0) + ' m' }; });
+  T('4 player spawn: 8 cars, 1 player, on asphalt, behind the line, no overlap', () => { const r = mkSim(); r.state = 'grid'; let minD = 1e9;
+    for (const a of r.cars) for (const b of r.cars) if (a !== b) minD = Math.min(minD, Math.hypot(a.x - b.x, a.y - b.y));
+    const ok = r.cars.length === 8 && r.cars.filter(c => c.isPlayer).length === 1 && r.cars.every(c => Math.abs(c.loc.d) < HALF && c.dist < 0) && minD > 4; return { ok, msg: 'min gap ' + minD.toFixed(1) }; });
+  T('5 keyboard: W/S/A/D + arrows map to throttle/brake/steer (real listeners)', () => { const chk = (code, f) => { press(code, 1); readInput(); const ok = f(race.input); press(code, 0); return ok; };
+    const a = chk('KeyW', i => i.throttle === 1 && i.brake === 0) && chk('ArrowUp', i => i.throttle === 1) && chk('KeyS', i => i.brake === 1 && i.throttle === 0) && chk('ArrowDown', i => i.brake === 1)
+      && chk('KeyA', i => i.steer === -1) && chk('ArrowLeft', i => i.steer === -1) && chk('KeyD', i => i.steer === 1) && chk('ArrowRight', i => i.steer === 1);
+    press('KeyW', 1); press('KeyD', 1); press('KeyD', 0); readInput(); const held = race.input.throttle === 1 && race.input.steer === 0; press('KeyW', 0); readInput(); return a && held && race.input.throttle === 0; });
+  T('6 keyboard: P pauses, C cycles camera, R toggles racing line, M toggles mute', () => { const p0 = paused, c0 = camMode, a0 = assist, m0 = muted; press('KeyP', 1); press('KeyP', 0); const p1 = paused; press('KeyP', 1); press('KeyP', 0);
+    press('KeyC', 1); press('KeyC', 0); const c1 = camMode; press('KeyC', 1); press('KeyC', 0); press('KeyC', 1); press('KeyC', 0); press('KeyR', 1); press('KeyR', 0); const a1 = assist; press('KeyR', 1); press('KeyR', 0); press('KeyM', 1); press('KeyM', 0); const m1 = muted; press('KeyM', 1); press('KeyM', 0);
+    return p1 !== p0 && paused === p0 && c1 === (c0 + 1) % 3 && camMode === c0 && a1 !== a0 && assist === a0 && m1 !== m0 && muted === m0; });
+  T('7 physics: throttle accelerates the car (moves, speed rises, 0-100 < 3.5 s)', () => { const r = mkSim(), p = r.player; place(p, track.L - 300, 0, 0); let t100 = null, x0 = p.x, y0 = p.y;
+    for (let i = 0; i < 720; i++) { p.step(1 / 120, track, { throttle: 1, brake: 0, steer: 0 }); if (t100 == null && p.speed > 27.8) t100 = i / 120; } return { ok: t100 != null && t100 < 3.5 && Math.hypot(p.x - x0, p.y - y0) > 40, msg: '0-100 in ' + (t100 && t100.toFixed(2)) + ' s' }; });
+  T('8 physics: braking decelerates hard, then reverse engages', () => { const r = mkSim(), p = r.player; place(p, track.L - 300, 0, 70); run(p, 1.5, { throttle: 0, brake: 1, steer: 0 }); const v1 = p.speed; place(p, track.L - 300, 0, 0); run(p, 2, { throttle: 0, brake: 1, steer: 0 });
+    return { ok: v1 < 30 && p.speed < -3, msg: `70->${v1.toFixed(0)} m/s in 1.5 s; reverse ${p.speed.toFixed(1)} m/s` }; });
+  T('9 physics: A steers left, D steers right, steering is rate-limited', () => { const r = mkSim(), p = r.player; place(p, track.L - 300, 0, 40); const h0 = p.h; p.step(1 / 120, track, { throttle: 0, brake: 0, steer: -1 }); const s1 = p.steer;
+    run(p, 0.6, { throttle: 0, brake: 0, steer: -1 }); const dl = wrap(p.h - h0); place(p, track.L - 300, 0, 40); const h1 = p.h; run(p, 0.6, { throttle: 0, brake: 0, steer: 1 }); const dr = wrap(p.h - h1);
+    return { ok: dl < -0.05 && dr > 0.05 && Math.abs(s1) < 0.2, msg: `left ${dl.toFixed(2)} rad, right ${dr.toFixed(2)} rad, first-step steer ${s1.toFixed(3)}` }; });
+  T('10 physics: top speed on the back straight is sensible (280-335 km/h), drag-limited', () => { const r = mkSim(), p = r.player, z0 = track.drs.slice().sort((a, b) => b.len - a.len)[0]; place(p, z0.start - 20, 0, 60); p.tyre.temp = 95; for (let i = 0; i < 120 * 12; i++) p.step(1 / 120, track, hold(p));
+    const kmh = p.speed * 3.6; return { ok: kmh > 280 && kmh < 335 && Math.abs(p.loc.d) < HALF, msg: kmh.toFixed(0) + ' km/h after 12 s' }; });
+  T('11 surfaces: grass and gravel slow the car more than asphalt', () => { const r = mkSim(), p = r.player, res = {}; for (const [k, off] of [['asphalt', 0], ['grass', HALF + SHOULDER + 3]]) { place(p, 3300, k === 'grass' ? 0 : 0, 60); place(p, 3300, off, 60); run(p, 2, { throttle: 0, brake: 0, steer: 0 }); res[k] = p.speed; }
+    return { ok: res.grass < res.asphalt - 10, msg: `after 2 s coasting: asphalt ${res.asphalt.toFixed(0)}, grass ${res.grass.toFixed(0)} m/s` }; });
+  T('12 grip: lateral acceleration is capped by tyre grip; worn/cold tyres cap lower', () => { const lat = (mod) => { const r = mkSim(), p = r.player; place(p, track.L - 300, 0, 60); mod(p); let m = 0; for (let i = 0; i < 240; i++) { p.step(1 / 120, track, { throttle: 0, brake: 0, steer: 1 }); m = Math.max(m, Math.abs(p.aLat)); } return m; };
+    const fresh = lat(p => { p.tyre.temp = 95; p.tyre.wear = 0; }), worn = lat(p => { p.tyre.temp = 95; p.tyre.wear = 0.9; }), cold = lat(p => { p.tyre.temp = 40; p.tyre.wear = 0; });
+    return { ok: worn < fresh * 0.88 && cold < fresh * 0.95 && fresh > 25 && fresh < 70, msg: `fresh ${fresh.toFixed(1)}, worn ${worn.toFixed(1)}, cold ${cold.toFixed(1)} m/s²` }; });
+  T('13 tyres: cornering heats, straights cool, wear accumulates, and both feed back into grip', () => { const r = mkSim(), p = r.player; place(p, track.L - 300, 0, 55); p.tyre.temp = 60; const t0 = p.tyre.temp, w0 = p.tyre.wear; run(p, 5, { throttle: 0.4, brake: 0, steer: 0.5 });
+    const heated = p.tyre.temp, worn = p.tyre.wear; const gWarm = p.tyre.grip(); const q = mkSim().player; place(q, 3200, 0, 60); q.tyre.temp = 130; for (let i = 0; i < 480; i++) q.step(1 / 120, track, hold(q, 0.5));
+    const gHot = (() => { const c = new Car({ tyre: 'M' }); c.tyre.temp = 140; return c.tyre.grip(); })(), gOk = (() => { const c = new Car({ tyre: 'M' }); c.tyre.temp = 95; return c.tyre.grip(); })();
+    return { ok: heated > t0 + 5 && worn > w0 && q.tyre.temp < 130 && gHot < gOk - 0.05 && p.tyre.grip() < new Car({ tyre: 'M' }).tyre.grip() + 1, msg: `heat ${t0}->${heated.toFixed(0)} C, cooling 130->${q.tyre.temp.toFixed(0)} C, wear ${w0}->${worn.toFixed(4)}, grip hot ${gHot.toFixed(2)} vs window ${gOk.toFixed(2)}` }; });
+  T('14 collision: barrier stops the car inside the wall line, loses speed, sets impact state', () => { const r = mkSim(), p = r.player; place(p, 3300, 0, 70); let maxD = 0; for (let i = 0; i < 120 * 5; i++) { p.step(1 / 120, track, { throttle: 0, brake: 0, steer: 0.15 }); maxD = Math.max(maxD, Math.abs(p.loc.d)); }
+    return { ok: maxD <= HALF + WALL + 0.05 && p.speedAbs < 40, msg: `max |d| ${maxD.toFixed(1)} (wall ${HALF + WALL}), speed now ${p.speedAbs.toFixed(0)} m/s` }; });
+  T('15 collision: head-on cars are pushed apart and exchange momentum', () => { const r = mkSim(), a = r.cars[0], b = r.cars[1]; place(a, 3300, 0, 40); place(b, 3300 + 3, 0, 10); a.dist = b.dist = 1000; let minGap = 1e9; const va0 = a.speed;
+    for (let i = 0; i < 120 * 2; i++) { r.collide(); a.x += a.vx / 120; a.y += a.vy / 120; b.x += b.vx / 120; b.y += b.vy / 120; minGap = Math.min(minGap, Math.hypot(a.x - b.x, a.y - b.y)); }
+    return { ok: a.speed < va0 - 8 && b.speed > 10 + 8 && Math.hypot(a.x - b.x, a.y - b.y) > 2.0 && isFinite(a.vx) && Math.abs(a.speed) < 60, msg: `A ${va0}->${a.speed.toFixed(1)}, B 10->${b.speed.toFixed(1)}, closest ${minGap.toFixed(2)} m` }; });
+  T('16 race: full 1-lap race with autopilot — lap counted, 3 sectors, finish, sector sum = lap time', () => { const r = new Race(track, { laps: 1, autopilot: true }); r.startCountdown(); let t = 0, sec = 0, lapEv = null, fin = false;
+    while (t < 200 && !fin) { r.tick(1 / 120); t += 1 / 120; for (const e of r.events.splice(0)) { if (e.type === 'sector') sec++; if (e.type === 'lap') lapEv = e; if (e.type === 'finish') fin = true; } }
+    const tm = r.player.tm, sum = tm.lastSec.reduce((a, b) => a + b, 0); return { ok: fin && sec === 3 && lapEv && lapEv.t > 70 && lapEv.t < 130 && Math.abs(sum - lapEv.t) < 1e-6 && r.state === 'finished', msg: `lap ${lapEv && fmt(lapEv.t)}, sectors ${tm.lastSec.map(x => x.toFixed(2))}, state ${r.state}` }; });
+  T('17 AI: 8 cars all progress, stay inside the walls, finish; positions unique', () => { const r = new Race(track, { laps: 1, autopilot: true }); r.startCountdown(); let t = 0, maxOff = 0; while (t < 220 && !r.cars.every(c => c.finished)) { r.tick(1 / 120); t += 1 / 120; for (const c of r.cars) maxOff = Math.max(maxOff, Math.abs(c.loc.d)); }
+    const pos = r.cars.map(c => c.pos).sort((a, b) => a - b).join(''); return { ok: r.cars.every(c => c.finished) && maxOff <= HALF + WALL + 0.1 && pos === '12345678', msg: `finished ${r.cars.filter(c => c.finished).length}/8, max|d| ${maxOff.toFixed(1)}, t=${t.toFixed(0)} s` }; });
+  T('18 ranking: order follows progress; finished cars rank before unfinished; backwards cars drop', () => { const r = mkSim(); r.cars.forEach((c, i) => { c.dist = 1000 - i * 20; c.finished = false; }); r.cars[3].finished = true; r.cars[3].finishT = 90; r.cars[5].dist = -500; r.rank();
+    return { ok: r.order[0] === r.cars[3] && r.order[7] === r.cars[5] && r.order.every((c, i) => c.pos === i + 1), msg: 'first ' + r.order[0].code + ' last ' + r.order[7].code }; });
+  T('19 timing: reversing over the line never creates a lap; restart resets timing', () => { const r = mkSim({ laps: 3 }), p = r.player; place(p, 60, 0, 0); p.dist = 60; p.prevS = 60; p.tm.maxK = 0; p.tm.lineT = 0; p.h += Math.PI; p.vx = Math.cos(p.h) * 30; p.vy = Math.sin(p.h) * 30;
+    for (let i = 0; i < 120 * 6; i++) { r.input = { throttle: 1, brake: 0, steer: 0 }; r.tick(1 / 120); } const laps = p.tm.laps; r.startCountdown(); return { ok: laps === 0 && p.dist < 0 && r.player.tm.laps === 0 && r.state === 'grid', msg: `laps after reversing ${laps}` }; });
+  T('20 ghost: best lap is recorded and replayed on the track; live delta available', () => { const r = new Race(track, { laps: 2, autopilot: true }); r.startCountdown(); let t = 0, sawDelta = false; while (t < 260 && !r.player.finished) { r.tick(1 / 120); t += 1 / 120; if (r.delta() != null) sawDelta = true; }
+    const g = r.ghost, gp = g && r.ghostAt(g.time * 0.5), q = gp && track.locate(gp.x, gp.y, -1, { }); return { ok: !!g && !!gp && Math.abs(q.d) < HALF + 1 && sawDelta, msg: g ? 'ghost ' + fmt(g.time) : 'no ghost' }; });
+  T('21 DRS: detection needs <1 s gap; opens only in a zone at full throttle; closes on brake; boosts top speed', () => { const zi = track.drs.indexOf(track.drs.slice().sort((a, b) => b.len - a.len)[0]), z = track.drs[zi], r = mkSim({ laps: 5 }), a = r.cars[0], b = r.cars[1];
+    r.cars.forEach(c => c.dist = -1000); const inp = { throttle: 1, brake: 0, steer: 0 };
+    const detect = gapMeters => { place(a, z.det - 10, 0, 70); place(b, z.det + 10, 0, 70); a.dist = 3000; b.dist = 3000 + gapMeters; r.rank(); a.drsPrevS = a.loc.s; a.drsElig = [];
+      for (let i = 0; i < 40; i++) { r.updateDrs(a, inp); a.step(1 / 120, track, inp); a.dist += a.speed / 120; } return !!a.drsElig[zi]; };
+    const close = detect(40), far = detect(140);                           // 40 m at 70 m/s = 0.57 s (eligible); 140 m = 2 s (not)
+    place(a, z.start + 100, 0, 70); a.drsElig[zi] = true; r.updateDrs(a, inp); const open = a.drsOpen; r.updateDrs(a, { throttle: 0, brake: 1, steer: 0 }); const closed = !a.drsOpen;
+    place(a, z.start - 60, 0, 70); a.drsElig[zi] = true; r.updateDrs(a, inp); const outside = !a.drsOpen;   // before the zone: stays closed
+    const top = f => { const c = new Car({ tyre: 'M' }); place(c, z.start + 5, 0, 70); c.tyre.temp = 95; for (let i = 0; i < 120 * 7; i++) { c.drsOpen = f; c.step(1 / 120, track, hold(c)); } return c.speed; };
+    const v0 = top(false), v1 = top(true); return { ok: close && !far && open && closed && outside && v1 > v0 + 3, msg: `gap40m:${close} gap140m:${far} open:${open} brake-closes:${closed} before-zone-closed:${outside}; speed ${v0.toFixed(1)} -> ${v1.toFixed(1)} m/s` }; });
+  T('22 AI difficulty and personalities change real behaviour', () => { const lap = d => { const r = new Race(track, { laps: 1, diff: d }); r.newRace({ diff: d, laps: 1 }); return r.cars.filter(c => !c.isPlayer).reduce((s, c) => s + c.skill, 0) / 7; };
+    const a = lap('rookie'), b = lap('pro'), c = lap('legend'); const ov = new Set(DRIVERS.slice(1).map(d => d.per.aggr)).size; return { ok: a < b && b < c && c <= 1.0 && ov > 4, msg: `mean skill ${a.toFixed(3)} < ${b.toFixed(3)} < ${c.toFixed(3)}` }; });
+  T('23 camera: initialises, follows heading, FOV widens with speed, mode switch changes rig', () => { const p = race.player; camS.init = false; updateCamera(0.016); const f0 = camS.fov, fine = [camS.x, camS.y, camS.z, camS.yaw, camS.pitch, camS.fov].every(isFinite);
+    const hv = p.vx, hv2 = p.vy; p.vx = Math.cos(p.h) * 80; p.vy = Math.sin(p.h) * 80; updateCamera(0.016); const f1 = camS.fov; const z0 = camS.z; camMode = 2; updateCamera(0.016); const z2 = camS.z; camMode = 0; p.vx = hv; p.vy = hv2; camS.init = false; updateCamera(0.016);
+    return { ok: fine && f1 > f0 && z2 < z0 - 1, msg: `fov ${(f0 * 57.3).toFixed(0)}->${(f1 * 57.3).toFixed(0)} deg, onboard z ${z2.toFixed(2)} vs chase ${z0.toFixed(2)}` }; });
+  T('24 renderer: draws a non-empty perspective frame (road, sky, kerbs, cars)', () => { menuWas = $('menu').style.display; R.resize(); R.frame(race, camS, 0.016); const c = R.ctx, w = R.W, h = R.H, seen = new Set();
+    for (let y = 0; y < 12; y++) for (let x = 0; x < 16; x++) { const d = c.getImageData(Math.floor((x + 0.5) * w / 16), Math.floor((y + 0.5) * h / 12), 1, 1).data; seen.add((d[0] >> 4) + ',' + (d[1] >> 4) + ',' + (d[2] >> 4)); }
+    return { ok: seen.size >= 12 && R.items.length > 50, msg: `${seen.size} distinct colours, ${R.items.length} drawables` }; });
+  T('25 renderer: frame time is bounded (avg of 20 frames)', () => { const t0 = performance.now(); for (let i = 0; i < 20; i++) R.frame(race, camS, 0.016); const avg = (performance.now() - t0) / 20; if (avg === 0) return { skip: true, msg: 'performance.now() is frozen (headless virtual time) - NOT MEASURED' }; return { ok: avg < 60, msg: avg.toFixed(1) + ' ms/frame (software canvas may be slower than a GPU browser)' }; });
+  T('26 HUD: position denominator equals the number of cars; DRS/tyre widgets read state', () => { updateHUD(1e7); return { ok: /\/8/.test($('pos').textContent) && race.cars.length === 8 && $('tName').textContent === race.player.tyre.comp.name && /DRS/.test($('drs').textContent), msg: $('pos').textContent }; });
+  T('27 audio: mute flag toggles and controls the master gain when audio is running', () => { const m0 = muted; toggleMute(); const ok1 = muted !== m0, g = audio.g ? audio.g.gain.value : (muted ? 0 : 1); toggleMute(); return ok1 && (audio.g ? audio.g.gain.value === (muted ? 0 : 1) : true) && (m0 || g === 0); });
+  T('28 menu: option buttons change the race settings that startRace() applies', () => { const b = document.querySelector('#oAI button[data-v="legend"]'); b.click(); const d = opt.diff; document.querySelector('#oAI button[data-v="pro"]').click(); const l = document.querySelector('#oLaps button[data-v="5"]'); l.click(); const n = opt.laps; document.querySelector('#oLaps button[data-v="3"]').click();
+    return d === 'legend' && opt.diff === 'pro' && n === 5 && opt.laps === 3; });
+  T('29 restart flow: Restart button -> grid -> lights -> green flag; W then moves the car; restart clears state', () => {
+    $('bRestart').click(); const a = race.state === 'grid' && $('menu').style.display === 'none'; let lit = 0, go = false; for (let i = 0; i < 120 * 9 && race.state !== 'racing'; i++) { race.tick(1 / 120); lit = Math.max(lit, race.lit); }
+    go = race.state === 'racing'; const d0 = race.player.dist; press('KeyW', 1); for (let i = 0; i < 240; i++) { readInput(); race.tick(1 / 120); } press('KeyW', 0); const moved = race.player.dist - d0;
+    $('bRestart').click(); const cleared = race.state === 'grid' && race.player.dist < 0 && race.player.tm.laps === 0; return { ok: a && lit === 5 && go && moved > 15 && cleared, msg: `lights ${lit}/5, moved ${moved.toFixed(0)} m in 2 s, restart cleared ${cleared}` }; });
+  T('30 results screen: shows every driver with times after the chequered flag', () => { const r = race; r.cars.forEach((c, i) => { c.finished = true; c.finishT = 90 + i; c.tm.best = 88 + i; c.dist = r.laps * track.L; }); r.state = 'finished'; r.rank(); showResults();
+    const rows = document.querySelectorAll('#resTable tr').length, shown = $('results').style.display === 'flex'; $('results').style.display = 'none'; r.newRace(); r.state = 'menu'; return { ok: rows === 9 && shown, msg: rows + ' table rows' }; });
+  T('31 touch controls drive the same input as the keyboard without breaking it', () => { const fire = (id, type) => $(id).dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true })); fire('tG', 'pointerdown'); fire('tL', 'pointerdown'); readInput(); const a = race.input.throttle === 1 && race.input.steer === -1;
+    fire('tG', 'pointerup'); fire('tL', 'pointerup'); readInput(); const b = race.input.throttle === 0 && race.input.steer === 0; press('KeyS', 1); readInput(); const c = race.input.brake === 1; press('KeyS', 0); readInput(); return a && b && c; });
+  const pass = out.filter(o => o.ok).length, skipped = out.filter(o => o.skip).length; const txt = out.map(o => (o.ok ? 'PASS ' : 'FAIL ') + o.name + (o.msg ? '  [' + o.msg + ']' : '')).join('\n') + `\n\n${pass}/${out.length} passed`;
+  const pre = document.createElement('pre'); pre.id = 'selftest'; pre.textContent = txt; pre.style.cssText = 'position:fixed;inset:0;margin:0;padding:16px;background:#05070d;color:#dfe5f3;font:13px/1.45 Consolas,monospace;overflow:auto;z-index:99;white-space:pre-wrap';
+  pre.innerHTML = out.map(o => `<span style="color:${o.ok ? '#22c55e' : o.skip ? '#ffd60a' : '#ff5a4f'}">${o.ok ? 'PASS' : o.skip ? 'SKIP' : 'FAIL'}</span> ${o.name.replace(/</g, '&lt;')}${o.msg ? ' <span style="color:#8a93a8">[' + o.msg.replace(/</g, '&lt;') + ']</span>' : ''}`).join('\n') + `\n\n<b>${pass}/${out.length} passed${skipped ? ', ' + skipped + ' not measured' : ''}</b>`;
+  document.body.appendChild(pre); document.title = `SELFTEST ${pass}/${out.length}${skipped ? ' (' + skipped + ' skipped)' : ''}`; race.newRace(); race.state = 'menu'; return out;
+}
+if (params.has('selftest')) setTimeout(runSelfTest, 30);
+if (params.has('demo')) { race.autopilot = true; opt.laps = +params.get('laps') || 3; startRace(); race.t = 1.5; race.tick(1 / 120); race.lightsOut = 5.2;
+  for (let i = 0, n = 120 * (+params.get('ff') || 0); i < n; i++) race.tick(1 / 120); camS.init = false;
+  if (params.has('cam')) { camMode = camS.mode = +params.get('cam') % 3; } if (params.has('assist')) { assist = camS.assist = true; } }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
