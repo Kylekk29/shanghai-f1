@@ -6,9 +6,9 @@ A playable, single-file racing simulator of the **Shanghai International Circuit
 
 ## Play
 
-Download `shanghai-f1-final.html` and open it in Chrome or Edge. That's it.
+**▶ Play online: https://kylekk29.github.io/shanghai-f1/shanghai-f1-final.html**
 
-Or enable **GitHub Pages** (Settings → Pages → deploy from `main`, root) and open `…/shanghai-f1-final.html`.
+Or download `shanghai-f1-final.html` and open it in Chrome or Edge — it also works offline.
 
 | Key | Action |
 |---|---|
